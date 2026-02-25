@@ -1,5 +1,12 @@
 var audioElement = document.getElementById("audio");
 var nextAudioElement = new Audio(); // Create a second audio element for preloading
+// API base: defaults to the new backend; override by setting `window.SERVER_BASE` before scripts load.
+const API_BASE = (window.SERVER_BASE || 'https://radio-wildflower-backend.onrender.com').replace(/\/$/, '');
+function buildUrl(path) {
+    if (!path) return path;
+    if (!path.startsWith('/')) path = '/' + path;
+    return API_BASE ? API_BASE + path : path;
+}
 let uiUpdateInterval; // Interval for UI updates and continuous data fetching
 let preloadedNextSegmentSrc = {}; // Stores the SRC of the *next* segment once preloaded
 let currentlyPlayingStation = null; // Track the name of the currently active station
@@ -300,7 +307,7 @@ function preloadNextSegment(trackObject, stationName) {
 
 
 async function fetchDataFromServer(linkEnding, callback = () => { }) {
-    fetch(`https://wildflower-radio-zj59.onrender.com${linkEnding}`)
+    fetch(buildUrl(linkEnding))
         .then((response) => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

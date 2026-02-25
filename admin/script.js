@@ -1,12 +1,11 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyDb1QamdgLbPwmf5vT5_f76q65Qe9gvSjk",
-  authDomain: "matthew-internet-radio.firebaseapp.com",
-  projectId: "matthew-internet-radio",
-  storageBucket: "matthew-internet-radio.appspot.com",
-  messagingSenderId: "G-255690604474",
-  appId: "1:255690604474:web:734de292b72a8a20b0a783",
-  measurementId: "G-PNTKZ9HR35",
-};
+    apiKey: "AIzaSyAEu01AD_j1VWJaW-y3e2srmtSLBtmrqqs",
+    authDomain: "linguabinary.firebaseapp.com",
+    projectId: "linguabinary",
+    storageBucket: "linguabinary.firebasestorage.app",
+    messagingSenderId: "189897041902",
+    appId: "1:189897041902:web:bbddff352e4442be1a10ff"
+  };
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
@@ -17,6 +16,14 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 //const storage = getStorage(app);
 const storage = firebase.storage();
+
+// API base helper: defaults to the new backend; override by setting `window.SERVER_BASE` before scripts load
+const API_BASE = (window.SERVER_BASE || 'https://radio-wildflower-backend.onrender.com').replace(/\/$/, '');
+function buildUrl(path) {
+  if (!path) return path;
+  if (!path.startsWith('/')) path = '/' + path;
+  return API_BASE ? API_BASE + path : path;
+}
 
 function getData(fileName, userCode, func = () => {}) {
   const storageRef = storage.ref(`/Users/${userCode}`);
@@ -57,7 +64,7 @@ document.body.onload = () => {
 const stationState = {}; // stationName -> { currentList: string[], selected?: string }
 
 function populateRadioStationList() {
-  fetch("https://wildflower-radio-zj59.onrender.com/getAllTrackInformation")
+  fetch(buildUrl('/getAllTrackInformation'))
     .then((response) => response.json())
     .then((trackObjects) => {
       const stationListContainer = document.getElementById("radioStationList");
@@ -460,7 +467,7 @@ function createStationDiv(stationName, trackObject) {
 let _serverTrackNamesCache = null;
 async function fetchServerTrackNames() {
   if (_serverTrackNamesCache) return _serverTrackNamesCache;
-  const resp = await fetch('https://wildflower-radio-zj59.onrender.com/getAllTracks');
+  const resp = await fetch(buildUrl('/getAllTracks'));
   if (!resp.ok) throw new Error(`Failed to load tracks: ${resp.status}`);
   const data = await resp.json();
   // normalize to array of strings
@@ -479,7 +486,7 @@ async function fetchServerTrackNames() {
 async function updateTrackListOnServer(stationName, trackList) {
   // Ensure we always send an array for trackList and include authPassword
   const body = { stationName, trackList: Array.isArray(trackList) ? trackList : [trackList], authPassword: 'password' };
-  const resp = await fetch('https://wildflower-radio-zj59.onrender.com/admin/editTrackList', {
+  const resp = await fetch(buildUrl('/admin/editTrackList'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -504,7 +511,7 @@ async function updateTrackListOnServer(stationName, trackList) {
 }
 
 function populateCurrentTrack(stationName) {
-  fetch("https://wildflower-radio-zj59.onrender.com/getAllTrackInformation")
+  fetch(buildUrl('/getAllTrackInformation'))
     .then((response) => response.json())
     .then((trackObjects) => {
       const trackObject = trackObjects[stationName];
@@ -642,7 +649,7 @@ function cleanString(input) {
 // Check server for duplicate tracks by title+author (case-insensitive)
 async function isDuplicateTrack(title, author) {
   try {
-    const resp = await fetch('https://wildflower-radio-zj59.onrender.com/getAllTracks');
+    const resp = await fetch(buildUrl('/getAllTracks'));
     if (!resp.ok) {
       return { error: true, message: `Server returned ${resp.status}` };
     }
@@ -753,7 +760,7 @@ document.getElementById("submit").onclick = async (e) => {
               };
               document.getElementById("trackDurationExtractor").pause();
 
-              fetch("https://wildflower-radio-zj59.onrender.com/addTrack", {
+              fetch(buildUrl('/addTrack'), {
                 method: "POST",
                 body: JSON.stringify(dataToSendToServer),
                 headers: {
