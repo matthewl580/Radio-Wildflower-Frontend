@@ -365,6 +365,11 @@ function createStationUI(title, desc, logoLink, availableToPlay, stationName) {
     img.className = 'substationLogo';
     img.src = logoLink || 'https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074';
     img.alt = title + ' logo';
+    // Fallback: if external CDN fails (DNS/outage), replace with a small inline SVG placeholder
+    img.onerror = function() {
+        this.onerror = null;
+        this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="%23eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="%23666">No Image</text></svg>';
+    };
     logoDiv.appendChild(img);
 
     logoAndPlay.appendChild(tuneBtn);

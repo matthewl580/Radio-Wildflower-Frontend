@@ -8,8 +8,8 @@
 
 /* Import Google Fonts with performance optimizations */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('global/animations.css');
-@import url('global/components.css');
+@import url('./animations.css');
+@import url('./components.css');
 
 /* CSS Custom Properties for Enhanced Design System */
 :root {
