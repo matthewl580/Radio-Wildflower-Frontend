@@ -20,7 +20,7 @@ let segmentCount = 0;
 
 // Get UI elements
 const playPauseBtn = document.getElementById("playPauseBtn");
-const stopBtn = document.getElementById("stopBtn");
+const stopBtn = document.getElementById("stopBtn"); // may be null if markup omits it
 // prev/next controls removed per requirements
 const visualizerBars = document.querySelectorAll(".visualizer-bar");
 const artistPhoto = document.querySelector('.artist-photo');
@@ -84,15 +84,31 @@ audioElement.onended = function() {
 };
 
 // Control button handlers
-playPauseBtn.addEventListener('click', function() {
-    if (currentlyPlayingStation) {
-        if (isPlaying) {
-            audioElement.pause();
-        } else {
-            audioElement.play();
+if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', function() {
+        if (currentlyPlayingStation) {
+            if (isPlaying) {
+                audioElement.pause();
+            } else {
+                audioElement.play();
+            }
         }
-    }
-});
+    });
+}
+
+// stop button may not be present; guard its listener
+if (stopBtn) {
+    stopBtn.addEventListener('click', function() {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+        currentlyPlayingStation = null;
+        stopVisualizer();
+        stopProgressUpdater();
+        resetUI();
+        const nowUI = document.getElementById('nowPlayingUI');
+        if (nowUI) nowUI.classList.remove('visible');
+    });
+}
 
 // previous/next removed (server doesn't support switching)
 
@@ -122,16 +138,6 @@ function stopProgressUpdater() {
         progressInterval = null;
     }
 }
-
-stopBtn.addEventListener('click', function() {
-    audioElement.pause();
-    audioElement.currentTime = 0;
-    currentlyPlayingStation = null;
-    stopVisualizer();
-    stopProgressUpdater();
-    resetUI();
-    const nowUI = document.getElementById('nowPlayingUI');
-    if (nowUI) nowUI.classList.remove('visible');
 });
 
 // Visualizer functions
@@ -177,7 +183,7 @@ function resetUI() {
     document.getElementById("trackDuration").textContent = "0:00";
     document.getElementById("trackProgressMeter").value = 0;
     playPauseBtn.disabled = true;
-    stopBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = true;
     updateCounterDisplay();
 }
 
@@ -280,7 +286,7 @@ function tuneIn(substationName) {
 
     // Enable control buttons
     playPauseBtn.disabled = false;
-    stopBtn.disabled = false;
+    if (stopBtn) stopBtn.disabled = false;
     showNowPlayingUI();
 
     // Initial fetch to get current track info and start playback
@@ -541,8 +547,8 @@ function formatTime(time = 0) {
 // Initial setup for the UI when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize control buttons as disabled
-    playPauseBtn.disabled = true;
-    stopBtn.disabled = true;
+    if (playPauseBtn) playPauseBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = true;
     // Populate the station selection UI from server
     loadStations();
 });
