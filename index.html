@@ -22,26 +22,25 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://matthew-radio.com/" />
-    <meta property="og:title" content="Matthew Internet Radio - Experience Music Like Never Before" />
+    <meta property="og:url" content="https://radiowildflower.netlify.app/" />
+    <meta property="og:title" content="Radio Wildflower - Experience Music Like Never Before" />
     <meta property="og:description" content="Join our growing community of music lovers discovering the best in internet radio - 24/7, commercial-free, and curated just for you." />
     <meta property="og:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='315'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='48' fill='%23333'>Matthew Radio</text></svg>" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://matthew-radio.com/" />
-    <meta property="twitter:title" content="Matthew Internet Radio - Experience Music Like Never Before" />
+    <meta property="twitter:url" content="https://radiowildflower.netlify.app/" />
+    <meta property="twitter:title" content="Radio Wildflower - Experience Music Like Never Before" />
     <meta property="twitter:description" content="Join our growing community of music lovers discovering the best in internet radio - 24/7, commercial-free, and curated just for you." />
-    <meta property="twitter:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='315'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='48' fill='%23333'>Matthew Radio</text></svg>" />
+    <meta property="twitter:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='315'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='48' fill='%23333'>Radio Wildflower</text></svg>" />
 
-    <title>Matthew Internet Radio - Experience Music Like Never Before</title>
+    <title>Radio Wildflower - Experience Music Like Never Before</title>
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/global/styles.css" />
     <link rel="stylesheet" href="/global/animations.css" />
     <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/landing-style.css" />
-
+    <!-- old landing styles removed; new unified theme applies across pages -->
     <script src="/global/nav.js" defer></script>
 
     <!-- Fonts -->
@@ -64,66 +63,60 @@
 
     <!-- Navigation injected by /global/nav.js -->
 
-    <!-- Main Content -->
-    <main id="main-content" role="main">
-        <div class="panel-grid">
-      <!-- Integrated Landing Main -->
-      <section class="hero">
-        <div class="container hero-grid">
-            <h1 class="display">Sound for the new age.</h1>
-            <p class="lead">Curated mixes, live sessions, and ambient soundscapes — all in a focused, elegant interface.</p>
-            <div class="ctas">
-              <a class="btn btn-primary" href="/play">Start Discovering</a>
-              <a class="btn btn-ghost" href="#about">Learn More</a>
-          
-        </div>
-      </section>
-
-      <section id="features" class="features container">
-        <h2 class="section-title reveal">Features</h2>
-        <div class="grid">
-          <article class="card feature reveal">
-            <h3>Curated Sessions</h3>
-            <p>Handpicked sets for deep focus and pure listening.</p>
-          </article>
-          <article class="card feature reveal">
-            <h3>Seamless Playlists</h3>
-            <p>Adaptive playlists tuned to your mood and time of day.</p>
-          </article>
-          <article class="card feature reveal">
-            <h3>Ambient Layers</h3>
-            <p>Blend textures and field recordings for a unique soundstage.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="about" class="about container">
-        <div class="about-card card reveal">
-          <div>
-            <h2>Design that listens</h2>
-            <p>Minimal UI, maximum presence — unobtrusive and elegant.</p>
+    <!-- Main Content: updated to match play page design -->
+    <main id="main-content" role="main" class="container">
+      <section class="hero-section">
+        <div class="hero-content">
+          <h1 class="hero-title reveal">Sound for the new age.</h1>
+          <p class="hero-subtitle">Curated mixes, live sessions, and ambient soundscapes &mdash; all in a focused, elegant interface.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/play">Start Discovering</a>
+            <a class="btn btn-secondary" href="#about">Learn More</a>
           </div>
-          <div>
-            <a class="btn btn-primary" href="/play">Try the Player</a>
-          </div>
-        </div>
-      </section>
         </div>
         <div class="hero-decor" aria-hidden="true"></div>
-      </div>
+      </section>
+
+      <section class="benefits-section" id="features">
+        <h2 class="section-title">Features</h2>
+        <div class="benefits-grid">
+          <div class="benefit-card reveal">
+            <div class="benefit-icon"><span class="material-symbols-rounded">note</span></div>
+            <h3>Curated Sessions</h3>
+            <p>Handpicked sets for deep focus and pure listening.</p>
+          </div>
+          <div class="benefit-card reveal">
+            <div class="benefit-icon"><span class="material-symbols-rounded">queue_music</span></div>
+            <h3>Seamless Playlists</h3>
+            <p>Adaptive playlists tuned to your mood and time of day.</p>
+          </div>
+          <div class="benefit-card reveal">
+            <div class="benefit-icon"><span class="material-symbols-rounded">layers</span></div>
+            <h3>Ambient Layers</h3>
+            <p>Blend textures and field recordings for a unique soundstage.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="benefits-section" id="about">
+        <h2 class="section-title">Design that listens</h2>
+        <p class="hero-subtitle" style="max-width:600px;margin:0 auto 24px;">Minimal UI, maximum presence &ndash; unobtrusive and elegant.</p>
+        <div class="hero-actions" style="justify-content:center;">
+          <a class="btn btn-primary" href="/play">Try the Player</a>
+        </div>
+      </section>
     </main>
 
     <!-- Footer -->
     <footer id="copyrightText" role="contentinfo">
       <div class="container">
-        <p>&copy; <span id="currentYear"></span> Matthew Internet Radio. All rights reserved.</p>
+        <p>&copy; <span id="currentYear"></span> Radio Wildflower. All rights reserved.</p>
       </div>
     </footer>
 
     <!-- Scripts -->
     <script src="/global/accessibility.js"></script>
     <script src="/global/theme-manager.js"></script>
-    <script src="/components/hero-carousel.js"></script>
     <script src="/components/stats-counter.js"></script>
 
     <script>

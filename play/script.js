@@ -7,18 +7,23 @@ function buildUrl(path) {
     if (!path.startsWith('/')) path = '/' + path;
     return API_BASE ? API_BASE + path : path;
 }
-let uiUpdateInterval; // Interval for UI updates and continuous data fetching
+// Interval used for server polling was removed since we only fetch when needed
+
+let progressInterval; // Updates local progress bar/time
 let preloadedNextSegmentSrc = {}; // Stores the SRC of the *next* segment once preloaded
 let currentlyPlayingStation = null; // Track the name of the currently active station
 let visualizerInterval; // Interval for visualizer animation
 let isPlaying = false; // Track playing state
 // Per-page station state (used by UI and for preloads)
 let stationState = {};
+let segmentCount = 0;
 
 // Get UI elements
 const playPauseBtn = document.getElementById("playPauseBtn");
 const stopBtn = document.getElementById("stopBtn");
+// prev/next controls removed per requirements
 const visualizerBars = document.querySelectorAll(".visualizer-bar");
+const artistPhoto = document.querySelector('.artist-photo');
 
 
 // Audio event handlers
@@ -26,6 +31,7 @@ audioElement.onplay = function() {
     isPlaying = true;
     updatePlayPauseButton();
     startVisualizer();
+    startProgressUpdater();
     // mark UI as playing
     const nowUI = document.getElementById('nowPlayingUI');
     if (nowUI) nowUI.classList.add('is-playing');
@@ -35,6 +41,7 @@ audioElement.onpause = function() {
     isPlaying = false;
     updatePlayPauseButton();
     stopVisualizer();
+    stopProgressUpdater();
     // mark UI as paused
     const nowUI = document.getElementById('nowPlayingUI');
     if (nowUI) nowUI.classList.remove('is-playing');
@@ -48,6 +55,9 @@ audioElement.onended = function() {
     const nowUI = document.getElementById('nowPlayingUI');
     if (nowUI) nowUI.classList.remove('is-playing');
     console.log("Segment ended for current audio element.");
+    // increment segment counter
+    segmentCount++;
+    updateCounterDisplay();
     let currentStationName = document.getElementById("trackName").dataset.station;
 
 
@@ -84,21 +94,44 @@ playPauseBtn.addEventListener('click', function() {
     }
 });
 
+// previous/next removed (server doesn't support switching)
+
 // Show the now-playing UI with entrance when a station is selected
 function showNowPlayingUI() {
     const nowUI = document.getElementById('nowPlayingUI');
     if (!nowUI) return;
-    // add visible class after a microtask to allow CSS transition
     requestAnimationFrame(() => nowUI.classList.add('visible'));
+}
+
+// progress updater keeps the UI in sync with audioElement.currentTime
+function startProgressUpdater() {
+    stopProgressUpdater();
+    progressInterval = setInterval(() => {
+        document.getElementById("trackCurrentPosition").textContent = formatTime(audioElement.currentTime);
+        // if duration known, adjust max occasionally
+        if (!isNaN(audioElement.duration)) {
+            const meter = document.getElementById("trackProgressMeter");
+            meter.max = audioElement.duration;
+            meter.value = audioElement.currentTime;
+        }
+    }, 250);
+}
+function stopProgressUpdater() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
 }
 
 stopBtn.addEventListener('click', function() {
     audioElement.pause();
     audioElement.currentTime = 0;
-    clearInterval(uiUpdateInterval);
     currentlyPlayingStation = null;
     stopVisualizer();
+    stopProgressUpdater();
     resetUI();
+    const nowUI = document.getElementById('nowPlayingUI');
+    if (nowUI) nowUI.classList.remove('visible');
 });
 
 // Visualizer functions
@@ -145,6 +178,7 @@ function resetUI() {
     document.getElementById("trackProgressMeter").value = 0;
     playPauseBtn.disabled = true;
     stopBtn.disabled = true;
+    updateCounterDisplay();
 }
 
 
@@ -238,13 +272,16 @@ function fetchAndUpdateStationData(stationName, forcePlay = false) {
 function tuneIn(substationName) {
     console.log(`Tuning into ${substationName}.`);
     currentlyPlayingStation = substationName; // Keep track of the active station
+    segmentCount = 0; // reset counter
+    updateCounterDisplay();
 
-    clearInterval(uiUpdateInterval); // Clear any existing interval from previous station
+    // Stop previous visualizer (no polling interval used anymore)
     stopVisualizer(); // Stop any existing visualizer
 
     // Enable control buttons
     playPauseBtn.disabled = false;
     stopBtn.disabled = false;
+    showNowPlayingUI();
 
     // Initial fetch to get current track info and start playback
     getAllTrackInformation((allTrackObjects) => {
@@ -264,13 +301,10 @@ function tuneIn(substationName) {
         }
     });
 
-    // Set up the interval for continuous UI updates and preloading
-    uiUpdateInterval = setInterval(function () {
-        // Only fetch and update if there's an active station
-        if (currentlyPlayingStation) {
-            fetchAndUpdateStationData(currentlyPlayingStation);
-        }
-    }, 1000); // Fetch new data and update UI every second
+    // don't poll repeatedly; future updates will happen on-ended or manual actions
+    // start local progress updater when audio begins
+    // (audio.onplay will trigger it)
+
 }
 
 
@@ -392,13 +426,20 @@ function createStationUI(title, desc, logoLink, availableToPlay, stationName) {
 
 // Load stations from server and populate the UI. Falls back to an empty list on error.
 function loadStations() {
+    const listEl = document.getElementById('substationList');
+    if (listEl) {
+        listEl.innerHTML = '<div class="placeholder-card">Loading stations...</div>';
+    }
     getAllStations((stations) => {
-        const listEl = document.getElementById('substationList');
         if (!listEl) return;
         listEl.innerHTML = '';
         if (!Array.isArray(stations)) {
             console.error('Stations endpoint did not return an array:', stations);
+            listEl.innerHTML = '<div class="placeholder-card">Failed to load stations</div>';
             return;
+        }
+        if (stations.length === 0) {
+            listEl.innerHTML = '<div class="placeholder-card">No stations available</div>';
         }
         stations.forEach(st => {
             // Use station properties; provide defaults where missing
@@ -424,15 +465,56 @@ function getAllStations(callback = () => {}) {
 
 
 function populateUI(trackObject, stationName) {
+    // progress and basic metadata
     document.getElementById("trackProgressMeter").value = trackObject.track.position;
     document.getElementById("trackProgressMeter").max = trackObject.track.duration;
-    document.getElementById("trackName").textContent = trackObject.track.title;
-    document.getElementById("trackAuthor").textContent = trackObject.track.author;
+    document.getElementById("trackName").textContent = trackObject.track.title || 'Unknown Title';
+    document.getElementById("trackAuthor").textContent = trackObject.track.author || '';
     document.getElementById("trackCurrentPosition").textContent = formatTime(trackObject.track.position);
     document.getElementById("trackDuration").textContent = formatTime(trackObject.track.duration);
     document.getElementById("trackName").dataset.station = stationName;
+
+    // Update artwork if provided by server (fallback to default)
+    try {
+        const artSrc = trackObject.track.artwork || trackObject.currentSegment && trackObject.currentSegment.artwork || null;
+        if (artSrc) {
+            document.getElementById('trackArtwork').src = artSrc;
+        }
+    } catch (e) { /* ignore */ }
+
+    // Update artist photo if provided
+    try {
+        const artistSrc = trackObject.track.artistPhoto || trackObject.artistPhoto || null;
+        if (artistPhoto && artistSrc) {
+            artistPhoto.src = artistSrc;
+        }
+    } catch (e) { /* ignore */ }
+
+    // If station has a track list stored, try to keep an index of current track
+    stationState[stationName] = stationState[stationName] || {};
+    const list = stationState[stationName].currentList || [];
+    if (list.length) {
+        // attempt to find index by matching title or SRC
+        let idx = list.findIndex(item => {
+            if (!item) return false;
+            const t = (item.title || item.track || item.name || '').toString();
+            const s = (item.SRC || item.src || item.SRC || '').toString();
+            return (t && trackObject.track.title && t === trackObject.track.title) || (s && audioElement.src && s === audioElement.src);
+        });
+        if (idx === -1) idx = 0; // fallback
+        stationState[stationName].currentIndex = idx;
+    }
 }
 
+
+// Helpers for prev/next navigation and playing an item from the station list
+
+function updateCounterDisplay() {
+    const el = document.getElementById('segmentCounter');
+    if (el) {
+        el.textContent = `Segments played: ${segmentCount}`;
+    }
+}
 
 function formatTime(time = 0) {
     let sec = time;

@@ -5,8 +5,9 @@
 
 /* Page-specific CSS Variables */
 :root {
-  --hero-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-  --stats-gradient: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #311b92 100%);
+  /* 60/30/10 color hierarchy: dominant black, secondary charcoal, accent orange */
+  --hero-gradient: linear-gradient(135deg, var(--bg-primary) 0%, var(--secondary-bg) 60%, var(--accent-primary) 100%);
+  --stats-gradient: linear-gradient(135deg, var(--bg-primary) 0%, var(--secondary-bg) 70%, var(--accent-primary) 100%);
   --card-bg: rgba(255, 255, 255, 0.02);
   --card-border: rgba(255, 255, 255, 0.08);
   --nav-blur: blur(20px);
@@ -39,10 +40,11 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-lg);
-  z-index: 1000;
+  z-index: 3000; /* ensure ahead of all page content */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   border-bottom: 1px solid var(--card-border);
   transition: all var(--transition-duration) var(--easing-standard);
+  pointer-events: auto;
 }
 
 #logoBar {
@@ -89,7 +91,11 @@ body {
 
 .nav-toggle {
   display: none;
-  background: transparent;
+  position: fixed; /* keep it outside normal flow */
+  top: 10px;
+  right: 10px;
+  z-index: 9000; /* absolutely above everything during debug */
+  background: rgba(255, 0, 0, 0.4); /* translucent red for visibility */
   border: none;
   color: var(--text-primary);
   font-size: 1.5rem;
@@ -309,18 +315,19 @@ body {
 .benefit-icon {
   width: 80px;
   height: 80px;
-  background: var(--hero-gradient);
+  background: var(--accent-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto var(--space-lg);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   position: relative;
   z-index: 1;
 }
 
-.benefit-icon .material-symbols-rounded {
+.benefit-icon .material-symbols-rounded,
+.benefit-icon.material-symbols-rounded {
   font-size: 2.5rem;
   color: white;
 }
@@ -466,12 +473,14 @@ body {
 @media (max-width: 768px) {
   #navBar {
     padding: 0 var(--space-md);
+    z-index: 2000;
   }
 
   #navBarOptions {
     position: absolute;
-    top: 70px;
+    top: 60px;
     right: var(--space-sm);
+    left: var(--space-sm);
     background: rgba(10, 10, 10, 0.95);
     backdrop-filter: var(--nav-blur);
     -webkit-backdrop-filter: var(--nav-blur);
@@ -480,9 +489,11 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     display: none;
-    min-width: 180px;
+    min-width: auto;
     gap: 0;
     border: 1px solid var(--card-border);
+    z-index: 3001;
+    pointer-events: auto;
   }
 
   #navBarOptions.open {
@@ -491,12 +502,14 @@ body {
 
   .nav-toggle {
     display: flex;
+    z-index: 2002;
   }
 
   .navBarOption {
     width: 100%;
     padding: var(--space-md);
     justify-content: flex-start;
+    box-sizing: border-box;
   }
 
   .hero-section {

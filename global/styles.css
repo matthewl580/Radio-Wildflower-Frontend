@@ -54,9 +54,9 @@
   --z-toast: 1080;
 
   /* Color palette (purple themed) */
-  --accent-primary: #7c4dff; /* primary purple */
-  --accent-secondary: #ff7a59; /* warm accent for visuals */
-  --bg-primary: linear-gradient(135deg,#0b0326 0%, #2b034e 100%); /* deep purple backdrop */
+  --accent-primary: #ff6a00; /* primary orange */
+  --accent-secondary: #ffa040; /* warm orange accent */
+  --bg-primary: #000000; /* keep black background globally */
   --bg-panel: rgba(255,255,255,0.96); /* light panel for cards */
   --card-surface: rgba(255,255,255,0.98);
   --text-on-panel: #0b0326;
@@ -231,13 +231,13 @@ a:focus-visible {
 
 .btn-secondary {
   background: transparent;
-  color: #6366f1;
-  border-color: #6366f1;
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 .btn-secondary:hover {
-  background: #6366f1;
-  color: #ffffff;
+  background: var(--accent-primary);
+  color: var(--text-on-panel);
 }
 
 /* Form Elements */
@@ -424,11 +424,11 @@ progress::-moz-progress-bar {
 
 .page-panel .panel-grid{display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center}
 
-/* Decorative hero visual (colorful wave) */
+/* Decorative hero visual – now monochrome/amber */
 .hero-decor{
   position:absolute;right:-80px;bottom:-40px;width:520px;height:320px;border-radius:240px;pointer-events:none;z-index:0;
-  background: radial-gradient(circle at 10% 20%, rgba(255,122,89,0.16), transparent 25%),
-              radial-gradient(circle at 70% 80%, rgba(124,77,255,0.14), transparent 28%);
+  background: radial-gradient(circle at 10% 20%, rgba(255,106,0,0.16), transparent 25%),
+              radial-gradient(circle at 70% 80%, rgba(255,106,0,0.12), transparent 28%);
   mix-blend-mode: screen;filter: blur(12px) saturate(1.1);
 }
 

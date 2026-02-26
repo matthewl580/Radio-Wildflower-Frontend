@@ -4,8 +4,7 @@
   const navItems = [
     { href: '/', icon: 'home', text: 'Home' },
     { href: '/play', icon: 'play_arrow', text: 'Play' },
-    { href: '/join', icon: 'emoji_people', text: 'Join' },
-    { href: '/donate', icon: 'volunteer_activism', text: 'Donate' }
+    { href: '/join', icon: 'emoji_people', text: 'Join' }
   ];
 
   function createNav() {
@@ -90,6 +89,7 @@
 
     // behavioral wiring
     function toggleMenu() {
+      console.log('nav toggle clicked');
       const isOpen = options.classList.toggle('open');
       toggle.setAttribute('aria-expanded', isOpen);
       if (window.accessibilityManager && typeof window.accessibilityManager.announce === 'function') {
@@ -102,6 +102,12 @@
     }
 
     toggle.addEventListener('click', toggleMenu);
+    // also allow clicking header to open if toggle not hit
+    header.addEventListener('click', function(e) {
+      if (e.target === header || e.target === logoBar) {
+        toggleMenu();
+      }
+    });
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {

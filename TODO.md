@@ -1,6 +1,0 @@
-- [ ] Step 1: Update global styles and create new animation/component files
-- [ ] Step 2: Modernize home page (index.html) styles
-- [ ] Step 3: Update play page styles and interactions
-- [ ] Step 4: Enhance join page form and section designs
-- [ ] Step 5: Polish admin dashboard styling
-- [ ] Step 6: Final consistency checks and responsive adjustments

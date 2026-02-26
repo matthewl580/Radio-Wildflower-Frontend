@@ -12,7 +12,7 @@
 </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Matthew Internet Radio - Play</title>
+    <title>Radio Wildflower - Play</title>
     <link rel="stylesheet" href="/global/styles.css" />
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/play/style.css" />
@@ -28,112 +28,73 @@
     <script src="/play/script.js" defer></script>
     <script src="/global/nav.js" defer></script>
     <style>
-      /* Strong, page-scoped overrides to make the Now Playing bar compact and highly visible */
-      .now-playing-section{padding:6px 8px !important;}
-      .now-playing-card{padding:6px !important;border-radius:6px !important;}
-      .now-playing-compact{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
-      .now-playing-compact .top-row{display:flex;justify-content:space-between;align-items:center;gap:8px;
-    flex-direction: row-reverse;}
-      .now-playing-compact .title-wrap{display:flex;gap:6px;align-items:center;min-width:0}
-      .now-playing-compact #trackName{font-size:0.95rem;font-weight:600;color:var(--md-sys-color-on-background);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .now-playing-compact #trackAuthor{font-size:0.78rem;color:var(--md-sys-color-on-background-variant);opacity:0.9;margin-left:6px}
-      .now-playing-compact #trackArtwork{width:40px;height:40px;border-radius:6px;object-fit:cover}
-      .now-playing-compact .bottom-row{display:flex;align-items:center;gap:8px;flex-direction: row-reverse;}
-      .now-playing-compact .time-left,.now-playing-compact .time-right{width:48px;text-align:center;font-size:0.78rem;color:var(--md-sys-color-on-background-variant)}
-      .now-playing-compact .progress-wrap{flex:1}
-      .now-playing-compact progress#trackProgressMeter{width:100%;height:6px;border-radius:999px;background:var(--bg-tertiary)!important}
-      .now-playing-compact .controls{display:flex;gap:6px;align-items:center;margin-left:8px}
-      /* make sure it sits above page content */
-      .now-playing-section{z-index:120 !important}
-
-      /* Fixed/sticky now-playing near bottom */
-      #nowPlayingUI {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%) translateY(24px);
-        bottom: 22px;
-        width: min(1080px, calc(100% - 40px));
-        max-width: 1080px;
-        box-shadow: 0 18px 60px rgba(11,3,38,0.6);
-        border-radius: 14px;
-        backdrop-filter: blur(6px) saturate(1.05);
-        transition: transform 420ms cubic-bezier(.2,.9,.2,1), opacity 320ms ease;
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      /* entrance when visible */
-      #nowPlayingUI.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-      /* playing micro-animation */
-      #nowPlayingUI.is-playing .now-playing-card { animation: pulse-glow 2.6s ease-in-out infinite; }
-
-      @keyframes pulse-glow {
-        0% { box-shadow: 0 12px 30px rgba(124,77,255,0.08); transform: translateY(0); }
-        50% { box-shadow: 0 22px 60px rgba(124,77,255,0.14); transform: translateY(-3px); }
-        100% { box-shadow: 0 12px 30px rgba(124,77,255,0.08); transform: translateY(0); }
-      }
-
-      /* subtle hover scale for controls */
-      .now-playing-card .control-btn:hover { transform: scale(1.06); }
-
-      /* animate the hero decor slightly while playing */
-      .hero-decor { transition: transform 900ms ease-in-out; }
-      #nowPlayingUI.is-playing ~ .hero-decor { transform: translateY(-6px) scale(1.02) rotate(-2deg); }
-
-      @media (max-width: 768px) {
-        #nowPlayingUI{left:16px;right:16px;transform:none;bottom:14px;width:calc(100% - 32px)}
-        #nowPlayingUI.visible{transform:none}
-      }
+      /* legacy now-playing styles removed – updated in external CSS */
     </style>
   </head>
   <body>
     <!-- Navigation injected by /global/nav.js -->
 
     <!-- Main Content -->
-      <div class="panel-grid">
-        <div id="nowPlayingUI" class="now-playing-section">
-        <div class="now-playing-card now-playing-compact">
-          <div class="top-row">
-            <div class="title-wrap">
-              <span id="trackName">Select a station to start listening</span>
-              <span id="trackAuthor">by Nobody</span>
+    <main class="play-wrapper container">
+      <section id="nowPlayingUI" class="hero-player">
+        <div class="hero-inner">
+          <div class="album-area">
+            <div class="album-circle">
+              <img id="trackArtwork" src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074" alt="Album artwork" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=260 height=260><rect width=\'100%\' height=\'100%\' fill=\'%230b0326\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=20 fill=\'%23fff\'>No Image</text></svg>'" />
             </div>
-            <img id="trackArtwork" src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074" alt="art" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'100%\' height=\'100%\' fill=\'%23eee\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=\'18\' fill=\'%23666\'>No Image</text></svg>'" />
           </div>
 
-          <div class="bottom-row">
-            <div class="time-left"><span id="trackCurrentPosition">0:00</span></div>
-            <div class="progress-wrap"><progress id="trackProgressMeter" value="0" max="100"></progress></div>
-            <div class="time-right"><span id="trackDuration">0:00</span></div>
-            <div class="controls">
-              <button id="playPauseBtn" class="control-btn" disabled><span class="material-symbols-rounded">play_arrow</span></button>
-              <button id="stopBtn" class="control-btn" disabled><span class="material-symbols-rounded">stop</span></button>
+          <div class="hero-meta">
+            <div class="brand">Wildflower Radio</div>
+            <div class="now-playing-text">Now Playing:<br/><span id="trackName">[Song Title]</span> <span class="by-icon"><span class="material-symbols-rounded">person</span></span> <span id="trackAuthor">[Artist Name]</span></div>
+            <div id="segmentCounter" class="segment-counter">Segments: 0</div>
+
+            <div class="hero-controls">
+              <button id="playPauseBtn" class="play-circle" disabled aria-label="Play/Pause"><span class="material-symbols-rounded">play_arrow</span></button>
+            </div>
+
+            <div class="progress-row">
+              <div class="time-display"><span id="trackCurrentPosition">0:00</span></div>
+              <div class="progress-bar-container"><progress id="trackProgressMeter" value="0" max="100"></progress></div>
+              <div class="time-display"><span id="trackDuration">0:00</span></div>
             </div>
           </div>
         </div>
-      </div>
-        <div class="play-container">
-          <div class="play-header">
-        <h1 class="play-title">Live Radio Streams</h1>
-        <p class="play-subtitle">Choose your favorite station and start listening</p>
 
-      <div class="stations-section">
-        <h2>Available Stations</h2>
+        <div class="artist-card">
+          <div class="artist-left">
+            <img class="artist-photo" src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/artist-placeholder.jpg?v=1" alt="Artist" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=120 height=120><rect width=\'100%\' height=\'100%\' fill=\'%23ddd\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=14 fill=\'%23666\'>Artist</text></svg>'" />
+          </div>
+          <div class="artist-right">
+            <div class="artist-name">Artist Info</div>
+            <div class="artist-bio">[A brief, tasteful description of the artist's background and musical style]</div>
+            <div class="artist-socials">
+              <a href="#" aria-label="Google"><span class="material-symbols-rounded">google</span></a>
+              <a href="#" aria-label="Instagram"><span class="material-symbols-rounded">instagram</span></a>
+              <a href="#" aria-label="Twitter"><span class="material-symbols-rounded">twitter</span></a>
+              <a href="#" aria-label="Spotify"><span class="material-symbols-rounded">music_note</span></a>
+              <a href="#" aria-label="YouTube"><span class="material-symbols-rounded">play_circle</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- single-station header removed, station list shown directly -->
+
+      <section class="stations-section">
         <div id="substationList" class="stations-grid"></div>
-      </div>
+      </section>
 
      
-      <div class="hero-decor" aria-hidden="true"></div>
-      </div>
-    </div>
+
+    </main>
  
     <audio id="audio" src=""></audio>
 
     <!-- Navigation behavior provided by /global/nav.js -->
 
     <footer id="copyrightText">
-      <p>Copyright Matthew Internet Radio. All rights reserved.</p>
+      <p>Copyright Radio Wildflower. All rights reserved.</p>
     </footer>
   </body>
 </html>
