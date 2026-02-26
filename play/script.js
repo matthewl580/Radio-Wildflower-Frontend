@@ -138,7 +138,7 @@ function stopProgressUpdater() {
         progressInterval = null;
     }
 }
-});
+
 
 // Visualizer functions
 function startVisualizer() {
