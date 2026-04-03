@@ -175,7 +175,7 @@ function updateStationDiv(stationDiv, trackObject) {
       const state = stationState[name];
       // Update remaining count element (next items are badges inside the list)
       const remEl = stationDiv.querySelector(".tracklist-remaining");
-      if (remEl && state && !(state.isDragging)) {
+      if (remEl && state && !state.isDragging) {
         const remaining = Math.max(0, (state.currentList || []).length - 3);
         remEl.innerHTML = remaining > 0 ? `<em>and ${remaining} more</em>` : "";
       }
