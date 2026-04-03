@@ -117,6 +117,7 @@ function updateStationDiv(stationDiv, trackObject) {
     if (name) {
       if (!stationState[name]) {
         // Initialize state with server list if no local edits exist
+        // Use simple extraction for periodic updates - don't do async metadata lookup here
         const extracted = (function extractTrackList(obj) {
           if (!obj) return [];
           const candidates = [obj.trackList, obj.tracklist, obj.queue, obj.playlist, obj.tracks, obj.trackArray, obj.trackNames];
@@ -182,7 +183,7 @@ function createStationDiv(stationName, trackObject) {
   trackListContainer.className = 'station-tracklist-container';
 
   // Defensive extraction of a station track list from several possible shapes
-  const extractTrackList = (obj) => {
+  const extractTrackList = async (obj) => {
     if (!obj) return [];
     const candidates = [
       obj.trackList,
@@ -194,19 +195,51 @@ function createStationDiv(stationName, trackObject) {
       obj.trackNames,
     ];
 
+    let rawList = [];
     for (const c of candidates) {
       if (!c) continue;
-      if (Array.isArray(c)) return c.map(item => {
-        if (typeof item === 'string') return item;
-        if (item && item.title) return item.title;
-        if (item && item.track && item.track.title) return item.track.title;
-        return String(item);
-      });
-      if (typeof c === 'object') {
-        // object might be map of id->track
-        return Object.values(c).map(item => item && item.title ? item.title : (item && item.track && item.track.title ? item.track.title : String(item)));
+      if (Array.isArray(c)) {
+        rawList = c;
+        break;
       }
-      if (typeof c === 'string') return [c];
+      if (typeof c === 'object') {
+        rawList = Object.values(c);
+        break;
+      }
+      if (typeof c === 'string') {
+        rawList = [c];
+        break;
+      }
+    }
+
+    // If we found a list, try to convert IDs to actual track titles
+    if (rawList.length > 0) {
+      try {
+        const metadata = await fetchServerTrackMetadata();
+        return rawList.map(item => {
+          if (typeof item === 'string') {
+            // Check if this string is an ID that we can look up
+            const track = metadata[item];
+            if (track && track.title) {
+              return track.title;
+            }
+            // If no metadata found, return the string as-is (might already be a title)
+            return item;
+          }
+          if (item && item.title) return item.title;
+          if (item && item.track && item.track.title) return item.track.title;
+          return String(item);
+        });
+      } catch (err) {
+        console.warn('Could not fetch track metadata, using raw list:', err);
+        // Fallback to original logic
+        return rawList.map(item => {
+          if (typeof item === 'string') return item;
+          if (item && item.title) return item.title;
+          if (item && item.track && item.track.title) return item.track.title;
+          return String(item);
+        });
+      }
     }
 
     // Fallback to the current track if available
@@ -216,10 +249,19 @@ function createStationDiv(stationName, trackObject) {
 
   // Initialize or reuse preserved station list state
   if (!stationState[stationName]) {
-    stationState[stationName] = { currentList: extractTrackList(trackObject), selected: '' };
+    // extractTrackList is now async, so we need to await it
+    extractTrackList(trackObject).then(list => {
+      stationState[stationName] = { currentList: list, selected: '' };
+      renderList(list);
+    }).catch(err => {
+      console.error('Error extracting track list:', err);
+      stationState[stationName] = { currentList: [], selected: '' };
+      renderList([]);
+    });
+  } else {
+    // use existing state
+    renderList(stationState[stationName].currentList || []);
   }
-  // use stationState[stationName].currentList dynamically so updates persist across refreshes
-  // (do not create a separate local copy that could become stale)
 
   // Tracklist title + list
   const listTitle = document.createElement('div');
@@ -288,19 +330,23 @@ function createStationDiv(stationName, trackObject) {
   stationDiv.appendChild(trackListContainer);
 
   // Populate the select with tracks from server (cached)
-  fetchServerTrackNames().then((names) => {
+  Promise.all([fetchServerTrackNames(), fetchServerTrackMetadata()]).then(([names, metadata]) => {
     // clear and add default
     select.innerHTML = '';
     const emptyOption = document.createElement('option');
     emptyOption.value = '';
     emptyOption.textContent = '-- select track --';
     select.appendChild(emptyOption);
-    names.forEach(n => {
+    
+    // Create options with title as display text and ID as value
+    Object.entries(metadata).forEach(([id, track]) => {
+      const title = track.title || (track.track && track.track.title) || id;
       const o = document.createElement('option');
-      o.value = n;
-      o.textContent = n;
+      o.value = id; // Store ID as value
+      o.textContent = title; // Display title
       select.appendChild(o);
     });
+    
     // restore previous selection if present
     const prev = stationState[stationName] && stationState[stationName].selected;
     if (prev) select.value = prev;
@@ -427,23 +473,29 @@ function createStationDiv(stationName, trackObject) {
 
   // Handler: add track from select
   addBtn.addEventListener('click', async () => {
-    const chosen = select.value;
-    if (!chosen) {
+    const chosenId = select.value;
+    if (!chosenId) {
       showError('Please select a track to add.');
       return;
     }
+    
+    // Get the title for the selected ID
+    const metadata = await fetchServerTrackMetadata();
+    const track = metadata[chosenId];
+    const chosenTitle = track ? (track.title || (track.track && track.track.title) || chosenId) : chosenId;
+    
     // prevent duplicates in list
     const existsList = (stationState[stationName] && stationState[stationName].currentList) || [];
-    if (existsList.includes(chosen)) {
+    if (existsList.includes(chosenTitle)) {
       showError('Track already in the station list.');
       return;
     }
-    const updated = (stationState[stationName].currentList || []).concat([chosen]);
+    const updated = (stationState[stationName].currentList || []).concat([chosenTitle]);
     renderList(updated);
     try {
         const resp = await updateTrackListOnServer(stationName, updated);
         if (resp && resp.success) {
-          showSuccess(`Added track: ${chosen}`);
+          showSuccess(`Added track: ${chosenTitle}`);
           showToast(resp.data && resp.data.message ? resp.data.message : 'Radio track list updated', 3000, 'success');
           stationState[stationName].currentList = updated.slice();
           // refresh so server-authoritative shapes are rendered
@@ -463,20 +515,56 @@ function createStationDiv(stationName, trackObject) {
   return stationDiv;
 }
 
-// Cache for server track names
+// Cache for server track metadata (id -> {title, author, ...})
+let _serverTrackMetadataCache = null;
+async function fetchServerTrackMetadata() {
+  if (_serverTrackMetadataCache) return _serverTrackMetadataCache;
+  const resp = await fetch(buildUrl('/getAllTracks'));
+  if (!resp.ok) throw new Error(`Failed to load tracks: ${resp.status}`);
+  const data = await resp.json();
+  
+  // normalize to map of id -> track metadata
+  const metadata = {};
+  if (Array.isArray(data)) {
+    data.forEach(track => {
+      if (track && track.id) {
+        metadata[track.id] = track;
+      }
+    });
+  } else if (data && typeof data === 'object') {
+    Object.entries(data).forEach(([key, track]) => {
+      if (track) {
+        // Use the key as ID if track doesn't have an id field
+        const trackId = track.id || key;
+        metadata[trackId] = track;
+      }
+    });
+  }
+  _serverTrackMetadataCache = metadata;
+  return metadata;
+}
+
+// Cache for server track names (for dropdown)
 let _serverTrackNamesCache = null;
 async function fetchServerTrackNames() {
   if (_serverTrackNamesCache) return _serverTrackNamesCache;
   const resp = await fetch(buildUrl('/getAllTracks'));
   if (!resp.ok) throw new Error(`Failed to load tracks: ${resp.status}`);
   const data = await resp.json();
-  // normalize to array of strings
+  // normalize to array of track titles
   let names = [];
   if (Array.isArray(data)) {
-    names = data.map(t => typeof t === 'string' ? t : (t.title || (t.track && t.track.title) || ''))
-      .filter(Boolean);
+    names = data.map(t => {
+      if (typeof t === 'string') return t;
+      const title = t.title || (t.track && t.track.title) || '';
+      return title;
+    }).filter(Boolean);
   } else if (data && typeof data === 'object') {
-    names = Object.values(data).map(t => typeof t === 'string' ? t : (t.title || (t.track && t.track.title) || '')).filter(Boolean);
+    names = Object.values(data).map(t => {
+      if (typeof t === 'string') return t;
+      const title = t.title || (t.track && t.track.title) || '';
+      return title;
+    }).filter(Boolean);
   }
   _serverTrackNamesCache = names;
   return names;
