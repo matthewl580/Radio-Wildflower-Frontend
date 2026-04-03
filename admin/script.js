@@ -175,7 +175,7 @@ function updateStationDiv(stationDiv, trackObject) {
       const state = stationState[name];
       // Update remaining count element (next items are badges inside the list)
       const remEl = stationDiv.querySelector(".tracklist-remaining");
-      if (remEl && !(stationState[name] && stationState[name].isDragging)) {
+      if (remEl && state && !(state.isDragging)) {
         const remaining = Math.max(0, (state.currentList || []).length - 3);
         remEl.innerHTML = remaining > 0 ? `<em>and ${remaining} more</em>` : "";
       }
@@ -292,24 +292,6 @@ function createStationDiv(stationName, trackObject) {
     return [];
   };
 
-  // Initialize or reuse preserved station list state
-  if (!stationState[stationName]) {
-    // extractTrackList is now async, so we need to await it
-    extractTrackList(trackObject)
-      .then((list) => {
-        stationState[stationName] = { currentList: list, selected: "" };
-        renderList(list);
-      })
-      .catch((err) => {
-        console.error("Error extracting track list:", err);
-        stationState[stationName] = { currentList: [], selected: "" };
-        renderList([]);
-      });
-  } else {
-    // use existing state
-    renderList(stationState[stationName].currentList || []);
-  }
-
   // Tracklist title + list
   const listTitle = document.createElement("div");
   listTitle.className = "tracklist-title";
@@ -346,7 +328,23 @@ function createStationDiv(stationName, trackObject) {
     }
   };
 
-  renderList(stationState[stationName].currentList || []);
+  // Initialize or reuse preserved station list state
+  if (!stationState[stationName]) {
+    // extractTrackList is now async, so we need to await it
+    extractTrackList(trackObject)
+      .then((list) => {
+        stationState[stationName] = { currentList: list, selected: "" };
+        renderList(list);
+      })
+      .catch((err) => {
+        console.error("Error extracting track list:", err);
+        stationState[stationName] = { currentList: [], selected: "" };
+        renderList([]);
+      });
+  } else {
+    // use existing state
+    renderList(stationState[stationName].currentList || []);
+  }
 
   // Add controls: select available server tracks and add button
   const controls = document.createElement("div");

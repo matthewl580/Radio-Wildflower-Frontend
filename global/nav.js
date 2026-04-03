@@ -22,7 +22,7 @@
     logoContainer.id = 'logomarkContainer';
     const img = document.createElement('img');
     img.id = 'logomark';
-    img.src = 'https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/MIR%20Logo.png?v=1716468410227';
+    img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40"><rect width="100%" height="100%" fill="%23ffffff"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" fill="%23333">Radio Wildflower</text></svg>';
     img.alt = document.title || 'Matthew Radio';
     img.onerror = function() {
       this.onerror = null;
