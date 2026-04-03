@@ -1,15 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-K9B7R9FY9P"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-K9B7R9FY9P"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-  gtag('config', 'G-K9B7R9FY9P');
-</script>
+      gtag("config", "G-K9B7R9FY9P");
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Radio Wildflower - Play</title>
@@ -24,7 +29,10 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
-    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='20' fill='%23333'>MR</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='20' fill='%23333'>MR</text></svg>"
+    />
     <script src="/play/script.js" defer></script>
     <script src="/global/nav.js" defer></script>
     <style>
@@ -48,47 +56,100 @@
         <div class="hero-inner">
           <div class="album-area">
             <div class="album-circle">
-              <img id="trackArtwork" src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074" alt="Album artwork" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=260 height=260><rect width=\'100%\' height=\'100%\' fill=\'%230b0326\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=20 fill=\'%23fff\'>No Image</text></svg>'" />
+              <img
+                id="trackArtwork"
+                src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074"
+                alt="Album artwork"
+                onerror="
+                  this.onerror = null;
+                  this.src =
+                    'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=260 height=260><rect width=\'100%\' height=\'100%\' fill=\'%230b0326\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=20 fill=\'%23fff\'>No Image</text></svg>';
+                "
+              />
             </div>
           </div>
 
           <div class="hero-meta">
             <div class="brand">Wildflower Radio</div>
-            <div class="now-playing-text">Now Playing:<br/><span id="trackName">[Song Title]</span> <span class="by-icon"><span class="material-symbols-rounded">person</span></span> <span id="trackAuthor">[Artist Name]</span></div>
+            <div class="now-playing-text">
+              Now Playing:<br /><span id="trackName">[Song Title]</span>
+              <span class="by-icon"
+                ><span class="material-symbols-rounded">person</span></span
+              >
+              <span id="trackAuthor">[Artist Name]</span>
+            </div>
             <div id="segmentCounter" class="segment-counter">Segments: 0</div>
 
             <div class="hero-controls">
-              <button id="playPauseBtn" class="play-circle" disabled aria-label="Play/Pause"><span class="material-symbols-rounded">play_arrow</span></button>
+              <button
+                id="playPauseBtn"
+                class="play-circle"
+                disabled
+                aria-label="Play/Pause"
+              >
+                <span class="material-symbols-rounded">play_arrow</span>
+              </button>
             </div>
 
             <div class="progress-row">
-              <div class="time-display"><span id="trackCurrentPosition">0:00</span></div>
-              <div class="progress-bar-container"><progress id="trackProgressMeter" value="0" max="100"></progress></div>
-              <div class="time-display"><span id="trackDuration">0:00</span></div>
+              <div class="time-display">
+                <span id="trackCurrentPosition">0:00</span>
+              </div>
+              <div class="progress-bar-container">
+                <progress
+                  id="trackProgressMeter"
+                  value="0"
+                  max="100"
+                ></progress>
+              </div>
+              <div class="time-display">
+                <span id="trackDuration">0:00</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="artist-card">
           <div class="artist-left">
-            <img class="artist-photo" src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/artist-placeholder.jpg?v=1" alt="Artist" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=120 height=120><rect width=\'100%\' height=\'100%\' fill=\'%23ddd\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=14 fill=\'%23666\'>Artist</text></svg>'" />
+            <img
+              class="artist-photo"
+              src="https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/artist-placeholder.jpg?v=1"
+              alt="Artist"
+              onerror="
+                this.onerror = null;
+                this.src =
+                  'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=120 height=120><rect width=\'100%\' height=\'100%\' fill=\'%23ddd\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial,Helvetica,sans-serif\' font-size=14 fill=\'%23666\'>Artist</text></svg>';
+              "
+            />
           </div>
           <div class="artist-right">
             <div class="artist-name">Artist Info</div>
-            <div class="artist-bio">[A brief, tasteful description of the artist's background and musical style]</div>
+            <div class="artist-bio">
+              [A brief, tasteful description of the artist's background and
+              musical style]
+            </div>
             <div class="artist-socials">
-              <a href="#" aria-label="Google"><span class="material-symbols-rounded">google</span></a>
-              <a href="#" aria-label="Instagram"><span class="material-symbols-rounded">instagram</span></a>
-              <a href="#" aria-label="Twitter"><span class="material-symbols-rounded">twitter</span></a>
-              <a href="#" aria-label="Spotify"><span class="material-symbols-rounded">music_note</span></a>
-              <a href="#" aria-label="YouTube"><span class="material-symbols-rounded">play_circle</span></a>
+              <a href="#" aria-label="Google"
+                ><span class="material-symbols-rounded">google</span></a
+              >
+              <a href="#" aria-label="Instagram"
+                ><span class="material-symbols-rounded">instagram</span></a
+              >
+              <a href="#" aria-label="Twitter"
+                ><span class="material-symbols-rounded">twitter</span></a
+              >
+              <a href="#" aria-label="Spotify"
+                ><span class="material-symbols-rounded">music_note</span></a
+              >
+              <a href="#" aria-label="YouTube"
+                ><span class="material-symbols-rounded">play_circle</span></a
+              >
             </div>
           </div>
         </div>
       </section>
-
     </main>
- 
+
     <audio id="audio" src=""></audio>
 
     <!-- Navigation behavior provided by /global/nav.js -->
