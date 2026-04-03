@@ -59,7 +59,8 @@ function setData(fileName, data, func = () => {}) {
 
 document.body.onload = () => {
   populateRadioStationList();
-  populateAllTrackDropdowns(); // Populate dropdowns immediately on page load
+  // Also try to populate dropdowns after a short delay in case stations load quickly
+  setTimeout(() => populateAllTrackDropdowns(), 500);
   setInterval(populateRadioStationList, 3000);
 };
 
@@ -581,28 +582,38 @@ function createStationDiv(stationName, trackObject) {
 let _serverTrackMetadataCache = null;
 async function fetchServerTrackMetadata() {
   if (_serverTrackMetadataCache) return _serverTrackMetadataCache;
+  console.log("Fetching track metadata from server..."); // Debug log
   const resp = await fetch(buildUrl("/getAllTracks"));
+  console.log("Server response status:", resp.status); // Debug log
   if (!resp.ok) throw new Error(`Failed to load tracks: ${resp.status}`);
   const data = await resp.json();
+  console.log("Raw server data:", data); // Debug log
 
   // normalize to map of id -> track metadata
   const metadata = {};
   if (Array.isArray(data)) {
-    data.forEach((track) => {
-      if (track && track.id) {
-        metadata[track.id] = track;
+    console.log("Data is an array with", data.length, "items"); // Debug log
+    data.forEach((track, index) => {
+      if (track) {
+        // Use track.id if available, otherwise use index as ID
+        const trackId = track.id || `track_${index}`;
+        metadata[trackId] = track;
+        console.log(`Added track ${trackId}:`, track); // Debug log
       }
     });
   } else if (data && typeof data === "object") {
+    console.log("Data is an object with keys:", Object.keys(data)); // Debug log
     Object.entries(data).forEach(([key, track]) => {
       if (track) {
-        // Use the key as ID if track doesn't have an id field
+        // Use track.id if available, otherwise use the object key as ID
         const trackId = track.id || key;
         metadata[trackId] = track;
+        console.log(`Added track ${trackId}:`, track); // Debug log
       }
     });
   }
   _serverTrackMetadataCache = metadata;
+  console.log("Final metadata object:", metadata); // Debug log
   return metadata;
 }
 
@@ -639,11 +650,16 @@ async function fetchServerTrackNames() {
 // Populate all track dropdowns with server track data
 async function populateAllTrackDropdowns() {
   try {
+    console.log("Starting to populate track dropdowns..."); // Debug log
     const metadata = await fetchServerTrackMetadata();
+    console.log("Fetched metadata with", Object.keys(metadata).length, "tracks"); // Debug log
 
     // Find all track dropdowns
     const dropdowns = document.querySelectorAll(".add-track-select");
-    dropdowns.forEach((select) => {
+    console.log("Found", dropdowns.length, "dropdowns to populate"); // Debug log
+    
+    dropdowns.forEach((select, index) => {
+      console.log(`Populating dropdown ${index + 1} with ID: ${select.id}`); // Debug log
       // Clear existing options except the default
       const defaultOption = select.querySelector('option[value=""]');
       select.innerHTML = "";
@@ -675,16 +691,32 @@ async function populateAllTrackDropdowns() {
         stationState[stationName] && stationState[stationName].selected;
       if (prev) select.value = prev;
     });
+    
+    console.log("Finished populating track dropdowns"); // Debug log
   } catch (err) {
     console.error("Error populating track dropdowns:", err);
-    // Fallback: show error in dropdowns
+    // Fallback: show error in dropdowns and try with sample data
     const dropdowns = document.querySelectorAll(".add-track-select");
+    console.log("Populating dropdowns with error message, found", dropdowns.length, "dropdowns");
     dropdowns.forEach((select) => {
       select.innerHTML = "";
-      const o = document.createElement("option");
-      o.value = "";
-      o.textContent = "Could not load server tracks";
-      select.appendChild(o);
+      const errorOption = document.createElement("option");
+      errorOption.value = "";
+      errorOption.textContent = "Could not load server tracks";
+      select.appendChild(errorOption);
+      
+      // Add some sample tracks for testing
+      const sampleTracks = [
+        { id: "sample_1", title: "Sample Track 1", author: "Sample Artist 1" },
+        { id: "sample_2", title: "Sample Track 2", author: "Sample Artist 2" }
+      ];
+      
+      sampleTracks.forEach(track => {
+        const o = document.createElement("option");
+        o.value = track.id;
+        o.textContent = `${track.title} - ${track.author}`;
+        select.appendChild(o);
+      });
     });
   }
 }
