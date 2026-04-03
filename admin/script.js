@@ -59,6 +59,7 @@ function setData(fileName, data, func = () => {}) {
 
 document.body.onload = () => {
   populateRadioStationList();
+  populateAllTrackDropdowns(); // Populate dropdowns immediately on page load
   setInterval(populateRadioStationList, 3000);
 };
 
@@ -93,6 +94,9 @@ function populateRadioStationList() {
         const name = card.dataset.station;
         if (!trackObjects[name]) card.remove();
       });
+      
+      // Update dropdowns in case new stations were added
+      populateAllTrackDropdowns();
     })
     .catch((error) => {
       console.error("Error fetching or parsing track information:", error);
@@ -375,38 +379,7 @@ function createStationDiv(stationName, trackObject) {
 
   stationDiv.appendChild(trackListContainer);
 
-  // Populate the select with tracks from server (cached)
-  Promise.all([fetchServerTrackNames(), fetchServerTrackMetadata()])
-    .then(([names, metadata]) => {
-      // clear and add default
-      select.innerHTML = "";
-      const emptyOption = document.createElement("option");
-      emptyOption.value = "";
-      emptyOption.textContent = "-- select track --";
-      select.appendChild(emptyOption);
-
-      // Create options with title as display text and ID as value
-      Object.entries(metadata).forEach(([id, track]) => {
-        const title = track.title || (track.track && track.track.title) || id;
-        const o = document.createElement("option");
-        o.value = id; // Store ID as value
-        o.textContent = title; // Display title
-        select.appendChild(o);
-      });
-
-      // restore previous selection if present
-      const prev =
-        stationState[stationName] && stationState[stationName].selected;
-      if (prev) select.value = prev;
-    })
-    .catch((err) => {
-      // leave select empty and show placeholder option
-      select.innerHTML = "";
-      const o = document.createElement("option");
-      o.value = "";
-      o.textContent = "Could not load server tracks";
-      select.appendChild(o);
-    });
+  // Dropdown is populated globally by populateAllTrackDropdowns() on page load
 
   // Handlers: delete track
   ul.addEventListener("click", async (ev) => {
@@ -661,6 +634,57 @@ async function fetchServerTrackNames() {
   }
   _serverTrackNamesCache = names;
   return names;
+}
+
+// Populate all track dropdowns with server track data
+async function populateAllTrackDropdowns() {
+  try {
+    const metadata = await fetchServerTrackMetadata();
+    
+    // Find all track dropdowns
+    const dropdowns = document.querySelectorAll('.add-track-select');
+    dropdowns.forEach(select => {
+      // Clear existing options except the default
+      const defaultOption = select.querySelector('option[value=""]');
+      select.innerHTML = '';
+      if (defaultOption) {
+        select.appendChild(defaultOption.cloneNode(true));
+      } else {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '-- select track --';
+        select.appendChild(emptyOption);
+      }
+      
+      // Add all tracks as options
+      Object.entries(metadata).forEach(([id, track]) => {
+        const title = track.title || (track.track && track.track.title) || id;
+        const author = track.author || (track.track && track.track.author) || '';
+        const displayText = author ? `${title} - ${author}` : title;
+        
+        const o = document.createElement('option');
+        o.value = id; // Store ID as value
+        o.textContent = displayText; // Display title and author
+        select.appendChild(o);
+      });
+      
+      // Restore previous selection if present
+      const stationName = select.id.replace('add-select-', '');
+      const prev = stationState[stationName] && stationState[stationName].selected;
+      if (prev) select.value = prev;
+    });
+  } catch (err) {
+    console.error('Error populating track dropdowns:', err);
+    // Fallback: show error in dropdowns
+    const dropdowns = document.querySelectorAll('.add-track-select');
+    dropdowns.forEach(select => {
+      select.innerHTML = '';
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'Could not load server tracks';
+      select.appendChild(o);
+    });
+  }
 }
 
 // Send updated track list for station to server
