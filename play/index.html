@@ -34,6 +34,14 @@
   <body>
     <!-- Navigation injected by /global/nav.js -->
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text">Connecting to Radio Wildflower...</p>
+      </div>
+    </div>
+
     <!-- Main Content -->
     <main class="play-wrapper container">
       <section id="nowPlayingUI" class="hero-player">
@@ -78,14 +86,6 @@
           </div>
         </div>
       </section>
-
-      <!-- single-station header removed, station list shown directly -->
-
-      <section class="stations-section">
-        <div id="substationList" class="stations-grid"></div>
-      </section>
-
-     
 
     </main>
  

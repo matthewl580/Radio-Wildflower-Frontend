@@ -25,6 +25,21 @@ const stopBtn = document.getElementById("stopBtn"); // may be null if markup omi
 const visualizerBars = document.querySelectorAll(".visualizer-bar");
 const artistPhoto = document.querySelector('.artist-photo');
 
+// Loading overlay functions
+function showLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+    }
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+}
+
 
 // Audio event handlers
 audioElement.onplay = function() {
@@ -301,9 +316,13 @@ function tuneIn(substationName) {
 
             // Preload the next segment based on this initial fetch
             preloadNextSegment(trackObject, substationName);
+            
+            // Hide loading overlay after successful connection
+            hideLoadingOverlay();
 
         } else {
             console.error(`Track object not found for station: ${substationName} on tune-in.`);
+            hideLoadingOverlay();
         }
     });
 
@@ -374,91 +393,31 @@ async function getAllTrackInformation(func = () => { }) {
 
 
 function createStationUI(title, desc, logoLink, availableToPlay, stationName) {
-    const container = document.createElement('div');
-    container.className = 'substationContainer';
-
-    const logoAndPlay = document.createElement('div');
-    logoAndPlay.className = 'logoAndPlayContainer';
-
-    const tuneBtn = document.createElement('div');
-    tuneBtn.className = 'tuneInButton';
-    if (availableToPlay) {
-        const icon = document.createElement('span');
-        icon.className = 'tuneInButtonIcon material-symbols-rounded';
-        icon.textContent = 'play_arrow';
-        tuneBtn.appendChild(icon);
-        tuneBtn.addEventListener('click', () => tuneIn(stationName));
-    } else {
-        const icon = document.createElement('span');
-        icon.className = 'tuneInButtonIcon material-symbols-rounded';
-        icon.textContent = 'signal_disconnected';
-        const txt = document.createElement('span');
-        txt.className = 'tuneInButtonText grayedOut';
-        txt.textContent = 'Unavailable';
-        tuneBtn.appendChild(icon);
-        tuneBtn.appendChild(txt);
-    }
-
-    const logoDiv = document.createElement('div');
-    logoDiv.className = 'substationLogoContainer';
-    const img = document.createElement('img');
-    img.className = 'substationLogo';
-    img.src = logoLink || 'https://cdn.glitch.global/f81e375a-f3b2-430f-9115-3f352b74f21b/WR%20Substation%20Icon.png?v=1716472186074';
-    img.alt = title + ' logo';
-    // Fallback: if external CDN fails (DNS/outage), replace with a small inline SVG placeholder
-    img.onerror = function() {
-        this.onerror = null;
-        this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="%23eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="%23666">No Image</text></svg>';
-    };
-    logoDiv.appendChild(img);
-
-    logoAndPlay.appendChild(tuneBtn);
-    logoAndPlay.appendChild(logoDiv);
-
-    const titleEl = document.createElement('div');
-    titleEl.className = 'substationTitle';
-    titleEl.textContent = title;
-
-    const descEl = document.createElement('div');
-    descEl.className = 'substationDescription';
-    descEl.textContent = desc;
-
-    container.appendChild(logoAndPlay);
-    container.appendChild(titleEl);
-    container.appendChild(descEl);
-
-    document.getElementById('substationList').appendChild(container);
+    // Single station mode - no UI card creation needed
+    return;
 }
 
-// Load stations from server and populate the UI. Falls back to an empty list on error.
+// Load the single station from server and auto-connect
 function loadStations() {
-    const listEl = document.getElementById('substationList');
-    if (listEl) {
-        listEl.innerHTML = '<div class="placeholder-card">Loading stations...</div>';
-    }
     getAllStations((stations) => {
-        if (!listEl) return;
-        listEl.innerHTML = '';
-        if (!Array.isArray(stations)) {
-            console.error('Stations endpoint did not return an array:', stations);
-            listEl.innerHTML = '<div class="placeholder-card">Failed to load stations</div>';
+        if (!Array.isArray(stations) || stations.length === 0) {
+            console.error('No stations available or failed to load stations');
+            hideLoadingOverlay();
             return;
         }
-        if (stations.length === 0) {
-            listEl.innerHTML = '<div class="placeholder-card">No stations available</div>';
-        }
-        stations.forEach(st => {
-            // Use station properties; provide defaults where missing
-            const name = st.name || 'Unknown Station';
-            const desc = st.description || '';
-            const logo = st.logo || ''; // if server provides logo
-            const available = true;
-            createStationUI(name, desc, logo, available, name);
-            // store initial trackList in stationState for play page features
-            stationState = stationState || {};
-            stationState[name] = stationState[name] || {};
-            stationState[name].currentList = Array.isArray(st.trackList) ? st.trackList.slice() : [];
-        });
+        
+        // Get the single station
+        const station = stations[0];
+        const stationName = station.name || 'Radio Wildflower';
+        
+        // Store station state
+        stationState = stationState || {};
+        stationState[stationName] = stationState[stationName] || {};
+        stationState[stationName].currentList = Array.isArray(station.trackList) ? station.trackList.slice() : [];
+        
+        // Auto-connect to the single station
+        console.log(`Auto-connecting to station: ${stationName}`);
+        tuneIn(stationName);
     });
 }
 
@@ -546,10 +505,13 @@ function formatTime(time = 0) {
 
 // Initial setup for the UI when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Show loading overlay immediately
+    showLoadingOverlay();
+    
     // Initialize control buttons as disabled
     if (playPauseBtn) playPauseBtn.disabled = true;
     if (stopBtn) stopBtn.disabled = true;
-    // Populate the station selection UI from server
+    // Populate the station selection UI from server and auto-connect to first station
     loadStations();
 });
 
