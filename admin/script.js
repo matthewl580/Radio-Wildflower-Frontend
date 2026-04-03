@@ -670,7 +670,8 @@ async function populateAllTrackDropdowns() {
       // Add all tracks as options
       Object.entries(metadata).forEach(([id, track]) => {
         const title = track.title || (track.track && track.track.title) || id;
-        const author = track.author || (track.track && track.track.author) || "";
+        const author =
+          track.author || (track.track && track.track.author) || "";
         const displayText = author ? `${title} - ${author}` : title;
 
         const o = document.createElement("option");
@@ -681,7 +682,8 @@ async function populateAllTrackDropdowns() {
 
       // Restore previous selection if present
       const stationName = select.id.replace("add-select-", "");
-      const prev = stationState[stationName] && stationState[stationName].selected;
+      const prev =
+        stationState[stationName] && stationState[stationName].selected;
       if (prev) select.value = prev;
     });
   } catch (err) {
