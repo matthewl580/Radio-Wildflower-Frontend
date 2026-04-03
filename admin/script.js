@@ -94,7 +94,7 @@ function populateRadioStationList() {
         const name = card.dataset.station;
         if (!trackObjects[name]) card.remove();
       });
-      
+
       // Update dropdowns in case new stations were added
       populateAllTrackDropdowns();
     })
@@ -640,48 +640,50 @@ async function fetchServerTrackNames() {
 async function populateAllTrackDropdowns() {
   try {
     const metadata = await fetchServerTrackMetadata();
-    
+
     // Find all track dropdowns
-    const dropdowns = document.querySelectorAll('.add-track-select');
-    dropdowns.forEach(select => {
+    const dropdowns = document.querySelectorAll(".add-track-select");
+    dropdowns.forEach((select) => {
       // Clear existing options except the default
       const defaultOption = select.querySelector('option[value=""]');
-      select.innerHTML = '';
+      select.innerHTML = "";
       if (defaultOption) {
         select.appendChild(defaultOption.cloneNode(true));
       } else {
-        const emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = '-- select track --';
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "-- select track --";
         select.appendChild(emptyOption);
       }
-      
+
       // Add all tracks as options
       Object.entries(metadata).forEach(([id, track]) => {
         const title = track.title || (track.track && track.track.title) || id;
-        const author = track.author || (track.track && track.track.author) || '';
+        const author =
+          track.author || (track.track && track.track.author) || "";
         const displayText = author ? `${title} - ${author}` : title;
-        
-        const o = document.createElement('option');
+
+        const o = document.createElement("option");
         o.value = id; // Store ID as value
         o.textContent = displayText; // Display title and author
         select.appendChild(o);
       });
-      
+
       // Restore previous selection if present
-      const stationName = select.id.replace('add-select-', '');
-      const prev = stationState[stationName] && stationState[stationName].selected;
+      const stationName = select.id.replace("add-select-", "");
+      const prev =
+        stationState[stationName] && stationState[stationName].selected;
       if (prev) select.value = prev;
     });
   } catch (err) {
-    console.error('Error populating track dropdowns:', err);
+    console.error("Error populating track dropdowns:", err);
     // Fallback: show error in dropdowns
-    const dropdowns = document.querySelectorAll('.add-track-select');
-    dropdowns.forEach(select => {
-      select.innerHTML = '';
-      const o = document.createElement('option');
-      o.value = '';
-      o.textContent = 'Could not load server tracks';
+    const dropdowns = document.querySelectorAll(".add-track-select");
+    dropdowns.forEach((select) => {
+      select.innerHTML = "";
+      const o = document.createElement("option");
+      o.value = "";
+      o.textContent = "Could not load server tracks";
       select.appendChild(o);
     });
   }
