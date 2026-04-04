@@ -11,11 +11,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
-firebase.initializeApp(firebaseConfig);
+console.log("[ADMIN SCRIPT] Firebase imports loaded");
+
+// Removed legacy firebase.initializeApp() - using modular API only
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 //const storage = getStorage(app);
-const storage = firebase.storage();
+const storage = getStorage(app);
+console.log("[ADMIN SCRIPT] Using modular Firebase storage");
 
 // API base helper: defaults to the new backend; override by setting `window.SERVER_BASE` before scripts load
 const API_BASE = (
