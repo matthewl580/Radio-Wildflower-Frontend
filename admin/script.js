@@ -98,9 +98,42 @@ function populateRadioStationList() {
 
       // Update dropdowns in case new stations were added
       populateAllTrackDropdowns();
+
+      // If no stations, show a message
+      if (Object.keys(trackObjects).length === 0) {
+        const noStationsMsg = document.createElement("div");
+        noStationsMsg.id = "no-stations-message";
+        noStationsMsg.style.cssText = `
+          text-align: center;
+          padding: 20px;
+          color: #666;
+          font-style: italic;
+        `;
+        noStationsMsg.textContent = "No radio stations found. The server may be unavailable or there are no active stations.";
+        stationListContainer.appendChild(noStationsMsg);
+      } else {
+        // Remove any existing no stations message
+        const existingMsg = document.getElementById("no-stations-message");
+        if (existingMsg) existingMsg.remove();
+      }
     })
     .catch((error) => {
       console.error("Error fetching or parsing track information:", error);
+      const stationListContainer = document.getElementById("radioStationList");
+      const errorMsg = document.createElement("div");
+      errorMsg.id = "stations-error-message";
+      errorMsg.style.cssText = `
+        text-align: center;
+        padding: 20px;
+        color: #c62828;
+        background: #ffebee;
+        border-radius: 5px;
+        margin: 10px 0;
+        border: 1px solid #ffcdd2;
+      `;
+      errorMsg.textContent = "Failed to load radio stations. Please check the server connection.";
+      stationListContainer.innerHTML = ""; // Clear any existing content
+      stationListContainer.appendChild(errorMsg);
     });
 }
 
@@ -108,14 +141,14 @@ function populateRadioStationList() {
 function updateStationDiv(stationDiv, trackObject) {
   try {
     stationDiv.dataset.station = stationDiv.dataset.station || "";
-    const progressPercent = Math.round(
+    const progressPercent = trackObject.track.position && trackObject.track.duration ? Math.round(
       (trackObject.track.position / trackObject.track.duration) * 100,
-    );
-    const segmentProgress = Math.round(
+    ) : 0;
+    const segmentProgress = trackObject.currentSegment.position && trackObject.currentSegment.duration ? Math.round(
       (trackObject.currentSegment.position /
         trackObject.currentSegment.duration) *
         100,
-    );
+    ) : 0;
 
     const titleEl = stationDiv.querySelector(".track-title");
     const authorEl = stationDiv.querySelector(".track-author");
@@ -127,10 +160,15 @@ function updateStationDiv(stationDiv, trackObject) {
     const fill = stationDiv.querySelector(".progress-fill");
     if (fill) fill.style.width = `${progressPercent}%`;
     const ptext = stationDiv.querySelector(".progress-text");
-    if (ptext) ptext.textContent = `${progressPercent}% complete`;
+    if (ptext) ptext.textContent = progressPercent > 0 ? `${progressPercent}% complete` : "Progress not available";
     const seg = stationDiv.querySelector(".segment-info");
-    if (seg)
-      seg.textContent = `Segment ${trackObject.track.numCurrentSegment} of ${trackObject.track.numSegments} (${segmentProgress}% complete)`;
+    if (seg) {
+      if (trackObject.track.numCurrentSegment && trackObject.track.numSegments) {
+        seg.textContent = `Segment ${trackObject.track.numCurrentSegment} of ${trackObject.track.numSegments} (${segmentProgress > 0 ? segmentProgress + "% complete" : "progress not available"})`;
+      } else {
+        seg.textContent = "Segment info not available";
+      }
+    }
 
     // Update next-three display based on preserved stationState (do not overwrite currentList)
     const name = stationDiv.dataset.station;
@@ -196,14 +234,14 @@ function createStationDiv(stationName, trackObject) {
   stationDiv.classList.add("trackInfo");
   stationDiv.dataset.station = stationName;
 
-  const progressPercent = Math.round(
+  const progressPercent = trackObject.track.position && trackObject.track.duration ? Math.round(
     (trackObject.track.position / trackObject.track.duration) * 100,
-  );
-  const segmentProgress = Math.round(
+  ) : 0;
+  const segmentProgress = trackObject.currentSegment.position && trackObject.currentSegment.duration ? Math.round(
     (trackObject.currentSegment.position /
       trackObject.currentSegment.duration) *
       100,
-  );
+  ) : 0;
 
   stationDiv.innerHTML = `
     <div class="station-header">
@@ -219,11 +257,10 @@ function createStationDiv(stationName, trackObject) {
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${progressPercent}%"></div>
         </div>
-        <div class="progress-text">${progressPercent}% complete</div>
+        <div class="progress-text">${progressPercent > 0 ? progressPercent + "% complete" : "Progress not available"}</div>
       </div>
       <div class="segment-info">
-        Segment ${trackObject.track.numCurrentSegment} of ${trackObject.track.numSegments} 
-        (${segmentProgress}% complete)
+        ${trackObject.track.numCurrentSegment && trackObject.track.numSegments ? `Segment ${trackObject.track.numCurrentSegment} of ${trackObject.track.numSegments} (${segmentProgress > 0 ? segmentProgress + "% complete" : "progress not available"})` : "Segment info not available"}
       </div>
     </div>
   `;
@@ -672,11 +709,11 @@ async function populateAllTrackDropdowns() {
         const title = track.title || (track.track && track.track.title) || id;
         const author =
           track.author || (track.track && track.track.author) || "";
-        const displayText = author ? `${title} - ${author}` : title;
+        const displayText = `ID: "${id}" Name: "${title}"${author ? ` by ${author}` : ''}`;
 
         const o = document.createElement("option");
         o.value = id; // Store ID as value for server communication
-        o.textContent = displayText; // Display actual track name and author
+        o.textContent = displayText; // Display ID and name
         select.appendChild(o);
       });
 
@@ -978,52 +1015,52 @@ document.getElementById("submit").onclick = async (e) => {
       .getDownloadURL()
       .then((downloadURL) => {
         document.getElementById("trackDurationExtractor").src = downloadURL;
-        document
-          .getElementById("trackDurationExtractor")
-          .play()
-          .then(() => {
-            var dataToSendToServer = {
-              downloadURL: downloadURL,
-              title: title,
-              author: author,
-              duration: Math.trunc(
-                document.getElementById("trackDurationExtractor").duration,
-              ),
-              authPassword: "password",
-            };
-            document.getElementById("trackDurationExtractor").pause();
+        const audio = document.getElementById("trackDurationExtractor");
+        audio.addEventListener('loadedmetadata', () => {
+          var dataToSendToServer = {
+            downloadURL: downloadURL,
+            title: title,
+            author: author,
+            duration: Math.trunc(audio.duration),
+            authPassword: "password",
+          };
 
-            fetch(buildUrl("/addTrack"), {
-              method: "POST",
-              body: JSON.stringify(dataToSendToServer),
-              headers: {
-                "Content-type": "application/json; charset=UTF-8",
-              },
-            })
-              .then((response) => response.json())
-              .then((responseData) => {
-                console.log("Server Response:", responseData);
-                showSuccess("Track added successfully!");
-                // Clear form
-                titleInput.value = "";
-                authorInput.value = "";
-                fileInput.value = "";
-                const submitBtn = document.getElementById("submit");
-                if (submitBtn) submitBtn.disabled = false;
-              })
-              .catch((error) => {
-                console.error("Error sending data to server:", error);
-                showError("Failed to add track. Please try again.");
-                const submitBtn = document.getElementById("submit");
-                if (submitBtn) submitBtn.disabled = false;
-              });
+          fetch(buildUrl("/addTrack"), {
+            method: "POST",
+            body: JSON.stringify(dataToSendToServer),
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
           })
-          .catch((error) => {
-            console.error("Error playing or getting duration:", error);
-            showError(
-              "Error processing audio file. Please check the file format.",
-            );
-          });
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((responseData) => {
+              console.log("Server Response:", responseData);
+              showSuccess("Track added successfully!");
+              // Clear form
+              titleInput.value = "";
+              authorInput.value = "";
+              fileInput.value = "";
+              const submitBtn = document.getElementById("submit");
+              if (submitBtn) submitBtn.disabled = false;
+            })
+            .catch((error) => {
+              console.error("Error sending data to server:", error);
+              showError("Failed to add track. Please try again.");
+              const submitBtn = document.getElementById("submit");
+              if (submitBtn) submitBtn.disabled = false;
+            });
+        });
+        audio.addEventListener('error', (error) => {
+          console.error("Error loading audio metadata:", error);
+          showError("Error processing audio file. Please check the file format.");
+          const submitBtn = document.getElementById("submit");
+          if (submitBtn) submitBtn.disabled = false;
+        });
       })
       .catch((error) => {
         console.error("Error getting download URL:", error);
