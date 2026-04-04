@@ -11,9 +11,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
+firebase.initializeApp(firebaseConfig);
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const storage = getStorage(app);
+//const storage = getStorage(app);
+const storage = firebase.storage();
 
 // API base helper: defaults to the new backend; override by setting `window.SERVER_BASE` before scripts load
 const API_BASE = (
@@ -45,8 +47,6 @@ function getData(fileName, userCode, func = () => {}) {
 }
 
 function setData(fileName, data, func = () => {}) {
-  // Deprecated: kept for compatibility, but new uploads use direct backend FormData
-  console.warn("setData called - consider migrating to direct backend upload");
   const storageRef = storage.ref(`/Tracks/`);
   storageRef
     .child(fileName)
@@ -56,10 +56,9 @@ function setData(fileName, data, func = () => {}) {
       console.log("Uploaded a raw string!");
     });
 }
-populateRadioStationList();
+
 document.body.onload = () => {
   populateRadioStationList();
-  console.log("Page loaded, initial station list populated.");
   // Also try to populate dropdowns after a short delay in case stations load quickly
   setTimeout(() => populateAllTrackDropdowns(), 500);
   setInterval(populateRadioStationList, 3000);
@@ -75,6 +74,7 @@ function populateRadioStationList() {
       const stationListContainer = document.getElementById("radioStationList");
 
       for (const stationName in trackObjects) {
+        if (!trackObjects.hasOwnProperty(stationName)) continue;
         const trackObject = trackObjects[stationName];
         // If a station card already exists, update only the dynamic pieces so editing state isn't lost
         const existing = stationListContainer.querySelector(
@@ -767,7 +767,7 @@ async function updateTrackListOnServer(stationName, trackList) {
     authPassword: "password",
   };
   const resp = await fetch(buildUrl("/admin/editTrackList"), {
-    method: "GET",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -1029,55 +1029,65 @@ document.getElementById("submit").onclick = async (e) => {
     return;
   }
 
-  console.log("[ADMIN DEBUG START] Title:", title);
-  console.log("[ADMIN DEBUG START] Author:", author);
-  const file = fileInput.files[0];
-  console.log("[ADMIN DEBUG START] File:", file?.name, "size:", file?.size);
+  setData("FreshlyUploadedMP3File", fileInput.files[0], (data) => {
+    if (!data) return;
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("author", author);
-  formData.append("mp3", file);
-  formData.append("authPassword", "password");
+    data.ref
+      .getDownloadURL()
+      .then((downloadURL) => {
+        document.getElementById("trackDurationExtractor").src = downloadURL;
+        const audio = document.getElementById("trackDurationExtractor");
+        audio.addEventListener("loadedmetadata", () => {
+          var dataToSendToServer = {
+            downloadURL: downloadURL,
+            title: title,
+            author: author,
+            duration: Math.trunc(audio.duration),
+            authPassword: "password",
+          };
 
-  console.log("[ADMIN DEBUG] Sending POST to:", buildUrl("/addTrack"));
-
-  const submitBtn = document.getElementById("submit");
-  try {
-    const response = await fetch(buildUrl("/addTrack"), {
-      method: "POST",
-      body: formData,
-    });
-
-    console.log("[ADMIN DEBUG] Response status:", response.status);
-
-    const responseText = await response.text();
-    console.log("[ADMIN DEBUG] Response text:", responseText);
-
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}: ${responseText.substring(0, 200)}`,
-      );
-    }
-
-    const responseData = JSON.parse(responseText);
-    console.log("[ADMIN DEBUG SUCCESS] Response data:", responseData);
-
-    showSuccess("Track added successfully!");
-    showToast("Track uploaded!", 3000, "success");
-
-    // Clear form
-    titleInput.value = "";
-    authorInput.value = "";
-    fileInput.value = "";
-    _serverTrackMetadataCache = null;
-    populateAllTrackDropdowns();
-    populateRadioStationList();
-  } catch (error) {
-    console.error("[ADMIN DEBUG ERROR]", error);
-    showError(`Upload failed: ${error.message}`);
-    showToast("Upload error - see console", 5000, "error");
-  } finally {
-    if (submitBtn) submitBtn.disabled = false;
-  }
+          fetch(buildUrl("/addTrack"), {
+            method: "POST",
+            body: JSON.stringify(dataToSendToServer),
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((responseData) => {
+              console.log("Server Response:", responseData);
+              showSuccess("Track added successfully!");
+              // Clear form
+              titleInput.value = "";
+              authorInput.value = "";
+              fileInput.value = "";
+              const submitBtn = document.getElementById("submit");
+              if (submitBtn) submitBtn.disabled = false;
+            })
+            .catch((error) => {
+              console.error("Error sending data to server:", error);
+              showError("Failed to add track. Please try again.");
+              const submitBtn = document.getElementById("submit");
+              if (submitBtn) submitBtn.disabled = false;
+            });
+        });
+        audio.addEventListener("error", (error) => {
+          console.error("Error loading audio metadata:", error);
+          showError(
+            "Error processing audio file. Please check the file format.",
+          );
+          const submitBtn = document.getElementById("submit");
+          if (submitBtn) submitBtn.disabled = false;
+        });
+      })
+      .catch((error) => {
+        console.error("Error getting download URL:", error);
+        showError("Error uploading file. Please try again.");
+      });
+  });
 };
