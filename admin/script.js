@@ -767,7 +767,7 @@ async function updateTrackListOnServer(stationName, trackList) {
     authPassword: "password",
   };
   const resp = await fetch(buildUrl("/admin/editTrackList"), {
-    method: "POST",
+    method: "GET",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
