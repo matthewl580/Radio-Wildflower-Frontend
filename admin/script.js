@@ -54,9 +54,10 @@ function setData(fileName, data, func = () => {}) {
       console.log("Uploaded a raw string!");
     });
 }
-
+populateRadioStationList();
 document.body.onload = () => {
   populateRadioStationList();
+  console.log("Page loaded, initial station list populated.");
   // Also try to populate dropdowns after a short delay in case stations load quickly
   setTimeout(() => populateAllTrackDropdowns(), 500);
   setInterval(populateRadioStationList, 3000);
