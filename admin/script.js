@@ -45,6 +45,8 @@ function getData(fileName, userCode, func = () => {}) {
 }
 
 function setData(fileName, data, func = () => {}) {
+  // Deprecated: kept for compatibility, but new uploads use direct backend FormData
+  console.warn("setData called - consider migrating to direct backend upload");
   const storageRef = storage.ref(`/Tracks/`);
   storageRef
     .child(fileName)
@@ -1027,65 +1029,44 @@ document.getElementById("submit").onclick = async (e) => {
     return;
   }
 
-  setData("FreshlyUploadedMP3File", fileInput.files[0], (data) => {
-    if (!data) return;
+  // Direct upload to backend with FormData
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("author", author);
+  formData.append("mp3", file);
+  formData.append("authPassword", "password");
 
-    data.ref
-      .getDownloadURL()
-      .then((downloadURL) => {
-        document.getElementById("trackDurationExtractor").src = downloadURL;
-        const audio = document.getElementById("trackDurationExtractor");
-        audio.addEventListener("loadedmetadata", () => {
-          var dataToSendToServer = {
-            downloadURL: downloadURL,
-            title: title,
-            author: author,
-            duration: Math.trunc(audio.duration),
-            authPassword: "password",
-          };
+  const submitBtn = document.getElementById("submit");
+  try {
+    const response = await fetch(buildUrl("/addTrack"), {
+      method: "POST",
+      body: formData,
+    });
 
-          fetch(buildUrl("/addTrack"), {
-            method: "POST",
-            body: JSON.stringify(dataToSendToServer),
-            headers: {
-              "Content-type": "application/json; charset=UTF-8",
-            },
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
-              }
-              return response.json();
-            })
-            .then((responseData) => {
-              console.log("Server Response:", responseData);
-              showSuccess("Track added successfully!");
-              // Clear form
-              titleInput.value = "";
-              authorInput.value = "";
-              fileInput.value = "";
-              const submitBtn = document.getElementById("submit");
-              if (submitBtn) submitBtn.disabled = false;
-            })
-            .catch((error) => {
-              console.error("Error sending data to server:", error);
-              showError("Failed to add track. Please try again.");
-              const submitBtn = document.getElementById("submit");
-              if (submitBtn) submitBtn.disabled = false;
-            });
-        });
-        audio.addEventListener("error", (error) => {
-          console.error("Error loading audio metadata:", error);
-          showError(
-            "Error processing audio file. Please check the file format.",
-          );
-          const submitBtn = document.getElementById("submit");
-          if (submitBtn) submitBtn.disabled = false;
-        });
-      })
-      .catch((error) => {
-        console.error("Error getting download URL:", error);
-        showError("Error uploading file. Please try again.");
-      });
-  });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server error ${response.status}: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    console.log("Server Response:", responseData);
+    showSuccess("Track added successfully!");
+    showToast("Track uploaded and added to server!", 4000, "success");
+
+    // Clear form
+    titleInput.value = "";
+    authorInput.value = "";
+    fileInput.value = "";
+    // Refresh track lists and dropdowns
+    _serverTrackMetadataCache = null; // Invalidate cache
+    populateAllTrackDropdowns();
+    populateRadioStationList();
+  } catch (error) {
+    console.error("Upload error:", error);
+    showError(`Failed to add track: ${error.message}`);
+    showToast("Upload failed - check console for details", 5000, "error");
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 };
