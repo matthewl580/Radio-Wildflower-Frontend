@@ -1029,13 +1029,18 @@ document.getElementById("submit").onclick = async (e) => {
     return;
   }
 
-  // Direct upload to backend with FormData
+  console.log("[ADMIN DEBUG START] Title:", title);
+  console.log("[ADMIN DEBUG START] Author:", author);
   const file = fileInput.files[0];
+  console.log("[ADMIN DEBUG START] File:", file?.name, "size:", file?.size);
+
   const formData = new FormData();
   formData.append("title", title);
   formData.append("author", author);
   formData.append("mp3", file);
   formData.append("authPassword", "password");
+
+  console.log("[ADMIN DEBUG] Sending POST to:", buildUrl("/addTrack"));
 
   const submitBtn = document.getElementById("submit");
   try {
@@ -1044,28 +1049,34 @@ document.getElementById("submit").onclick = async (e) => {
       body: formData,
     });
 
+    console.log("[ADMIN DEBUG] Response status:", response.status);
+
+    const responseText = await response.text();
+    console.log("[ADMIN DEBUG] Response text:", responseText);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server error ${response.status}: ${errorText}`);
+      throw new Error(
+        `HTTP ${response.status}: ${responseText.substring(0, 200)}`,
+      );
     }
 
-    const responseData = await response.json();
-    console.log("Server Response:", responseData);
+    const responseData = JSON.parse(responseText);
+    console.log("[ADMIN DEBUG SUCCESS] Response data:", responseData);
+
     showSuccess("Track added successfully!");
-    showToast("Track uploaded and added to server!", 4000, "success");
+    showToast("Track uploaded!", 3000, "success");
 
     // Clear form
     titleInput.value = "";
     authorInput.value = "";
     fileInput.value = "";
-    // Refresh track lists and dropdowns
-    _serverTrackMetadataCache = null; // Invalidate cache
+    _serverTrackMetadataCache = null;
     populateAllTrackDropdowns();
     populateRadioStationList();
   } catch (error) {
-    console.error("Upload error:", error);
-    showError(`Failed to add track: ${error.message}`);
-    showToast("Upload failed - check console for details", 5000, "error");
+    console.error("[ADMIN DEBUG ERROR]", error);
+    showError(`Upload failed: ${error.message}`);
+    showToast("Upload error - see console", 5000, "error");
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
