@@ -109,7 +109,8 @@ function populateRadioStationList() {
           color: #666;
           font-style: italic;
         `;
-        noStationsMsg.textContent = "No radio stations found. The server may be unavailable or there are no active stations.";
+        noStationsMsg.textContent =
+          "No radio stations found. The server may be unavailable or there are no active stations.";
         stationListContainer.appendChild(noStationsMsg);
       } else {
         // Remove any existing no stations message
@@ -131,7 +132,8 @@ function populateRadioStationList() {
         margin: 10px 0;
         border: 1px solid #ffcdd2;
       `;
-      errorMsg.textContent = "Failed to load radio stations. Please check the server connection.";
+      errorMsg.textContent =
+        "Failed to load radio stations. Please check the server connection.";
       stationListContainer.innerHTML = ""; // Clear any existing content
       stationListContainer.appendChild(errorMsg);
     });
@@ -141,14 +143,20 @@ function populateRadioStationList() {
 function updateStationDiv(stationDiv, trackObject) {
   try {
     stationDiv.dataset.station = stationDiv.dataset.station || "";
-    const progressPercent = trackObject.track.position && trackObject.track.duration ? Math.round(
-      (trackObject.track.position / trackObject.track.duration) * 100,
-    ) : 0;
-    const segmentProgress = trackObject.currentSegment.position && trackObject.currentSegment.duration ? Math.round(
-      (trackObject.currentSegment.position /
-        trackObject.currentSegment.duration) *
-        100,
-    ) : 0;
+    const progressPercent =
+      trackObject.track.position && trackObject.track.duration
+        ? Math.round(
+            (trackObject.track.position / trackObject.track.duration) * 100,
+          )
+        : 0;
+    const segmentProgress =
+      trackObject.currentSegment.position && trackObject.currentSegment.duration
+        ? Math.round(
+            (trackObject.currentSegment.position /
+              trackObject.currentSegment.duration) *
+              100,
+          )
+        : 0;
 
     const titleEl = stationDiv.querySelector(".track-title");
     const authorEl = stationDiv.querySelector(".track-author");
@@ -160,10 +168,17 @@ function updateStationDiv(stationDiv, trackObject) {
     const fill = stationDiv.querySelector(".progress-fill");
     if (fill) fill.style.width = `${progressPercent}%`;
     const ptext = stationDiv.querySelector(".progress-text");
-    if (ptext) ptext.textContent = progressPercent > 0 ? `${progressPercent}% complete` : "Progress not available";
+    if (ptext)
+      ptext.textContent =
+        progressPercent > 0
+          ? `${progressPercent}% complete`
+          : "Progress not available";
     const seg = stationDiv.querySelector(".segment-info");
     if (seg) {
-      if (trackObject.track.numCurrentSegment && trackObject.track.numSegments) {
+      if (
+        trackObject.track.numCurrentSegment &&
+        trackObject.track.numSegments
+      ) {
         seg.textContent = `Segment ${trackObject.track.numCurrentSegment} of ${trackObject.track.numSegments} (${segmentProgress > 0 ? segmentProgress + "% complete" : "progress not available"})`;
       } else {
         seg.textContent = "Segment info not available";
@@ -234,14 +249,20 @@ function createStationDiv(stationName, trackObject) {
   stationDiv.classList.add("trackInfo");
   stationDiv.dataset.station = stationName;
 
-  const progressPercent = trackObject.track.position && trackObject.track.duration ? Math.round(
-    (trackObject.track.position / trackObject.track.duration) * 100,
-  ) : 0;
-  const segmentProgress = trackObject.currentSegment.position && trackObject.currentSegment.duration ? Math.round(
-    (trackObject.currentSegment.position /
-      trackObject.currentSegment.duration) *
-      100,
-  ) : 0;
+  const progressPercent =
+    trackObject.track.position && trackObject.track.duration
+      ? Math.round(
+          (trackObject.track.position / trackObject.track.duration) * 100,
+        )
+      : 0;
+  const segmentProgress =
+    trackObject.currentSegment.position && trackObject.currentSegment.duration
+      ? Math.round(
+          (trackObject.currentSegment.position /
+            trackObject.currentSegment.duration) *
+            100,
+        )
+      : 0;
 
   stationDiv.innerHTML = `
     <div class="station-header">
@@ -709,7 +730,7 @@ async function populateAllTrackDropdowns() {
         const title = track.title || (track.track && track.track.title) || id;
         const author =
           track.author || (track.track && track.track.author) || "";
-        const displayText = `ID: "${id}" Name: "${title}"${author ? ` by ${author}` : ''}`;
+        const displayText = `ID: "${id}" Name: "${title}"${author ? ` by ${author}` : ""}`;
 
         const o = document.createElement("option");
         o.value = id; // Store ID as value for server communication
@@ -1016,7 +1037,7 @@ document.getElementById("submit").onclick = async (e) => {
       .then((downloadURL) => {
         document.getElementById("trackDurationExtractor").src = downloadURL;
         const audio = document.getElementById("trackDurationExtractor");
-        audio.addEventListener('loadedmetadata', () => {
+        audio.addEventListener("loadedmetadata", () => {
           var dataToSendToServer = {
             downloadURL: downloadURL,
             title: title,
@@ -1055,9 +1076,11 @@ document.getElementById("submit").onclick = async (e) => {
               if (submitBtn) submitBtn.disabled = false;
             });
         });
-        audio.addEventListener('error', (error) => {
+        audio.addEventListener("error", (error) => {
           console.error("Error loading audio metadata:", error);
-          showError("Error processing audio file. Please check the file format.");
+          showError(
+            "Error processing audio file. Please check the file format.",
+          );
           const submitBtn = document.getElementById("submit");
           if (submitBtn) submitBtn.disabled = false;
         });
