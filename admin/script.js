@@ -73,7 +73,6 @@ function populateRadioStationList() {
       const stationListContainer = document.getElementById("radioStationList");
 
       for (const stationName in trackObjects) {
-        if (!trackObjects.hasOwnProperty(stationName)) continue;
         const trackObject = trackObjects[stationName];
         // If a station card already exists, update only the dynamic pieces so editing state isn't lost
         const existing = stationListContainer.querySelector(
