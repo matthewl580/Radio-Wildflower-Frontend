@@ -68,7 +68,10 @@ const globalState = { masterList: [] };
 
 async function fetchMasterTrackList() {
   try {
-    const response = await fetch(MASTER_TRACKLIST_URL);
+    // Use Firebase Storage getDownloadURL for CORS-safe access
+    const tracklistRef = storage.ref("Tracks/TRACKLIST.json");
+    const url = await tracklistRef.getDownloadURL();
+    const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const list = await response.json();
     if (!Array.isArray(list)) throw new Error("Invalid JSON array");
