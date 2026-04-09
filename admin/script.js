@@ -1,4 +1,4 @@
-const firebaseConfig = {
+ const firebaseConfig = {
   apiKey: "AIzaSyAEu01AD_j1VWJaW-y3e2srmtSLBtmrqqs",
   authDomain: "linguabinary.firebaseapp.com",
   projectId: "linguabinary",
@@ -9,6 +9,7 @@ const firebaseConfig = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
 console.log("[ADMIN SCRIPT] Firebase imports loaded");
@@ -68,9 +69,7 @@ const globalState = { masterList: [] };
 
 async function fetchMasterTrackList() {
   try {
-    const tracklistRef = ref(storage, "Tracks/TRACKLIST.json");
-    const url = await getDownloadURL(tracklistRef);
-    const response = await fetch(url);
+    const response = await fetch(MASTER_TRACKLIST_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const list = await response.json();
     if (!Array.isArray(list)) throw new Error("Invalid JSON array");
@@ -79,7 +78,7 @@ async function fetchMasterTrackList() {
     return list;
   } catch (error) {
     console.error("Failed to fetch master tracklist:", error);
-    showToast("Failed to load master track list from Firebase", 5000, "error");
+    showToast("Failed to load master track list", 5000, "error");
     document.getElementById("globalTrackList").innerHTML =
       '<li style="color: #c62828; text-align: center; padding: 20px;">Failed to load master track list</li>';
   }
