@@ -14,7 +14,6 @@ import {
   ref,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
 console.log("[ADMIN SCRIPT] Firebase imports loaded");
 
