@@ -72,7 +72,7 @@ const globalState = { masterList: [] };
 
 async function fetchMasterTrackList() {
   try {
-    const response = await fetch(MASTER_TRACKLIST_URL);
+    const response = await fetch(buildUrl("/getTrackList"));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const list = await response.json();
     if (!Array.isArray(list)) throw new Error("Invalid JSON array");
