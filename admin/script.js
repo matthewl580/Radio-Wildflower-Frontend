@@ -76,7 +76,7 @@ async function fetchMasterTrackList() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     let trackList;
-    
+
     // Extract tracklist array from the response
     if (Array.isArray(data)) {
       trackList = data;
@@ -85,15 +85,22 @@ async function fetchMasterTrackList() {
     } else if (data.tracks && Array.isArray(data.tracks)) {
       trackList = data.tracks;
     } else {
-      throw new Error("Invalid response format: expected array or object with tracks/tracklist property");
+      throw new Error(
+        "Invalid response format: expected array or object with tracks/tracklist property",
+      );
     }
-    
+
     // Extract track names from track objects
-    const trackNames = trackList.map(track => {
+    const trackNames = trackList.map((track) => {
       if (typeof track === "string") return track;
-      return track["Track Name"] || track.name || track.title || JSON.stringify(track);
+      return (
+        track["Track Name"] ||
+        track.name ||
+        track.title ||
+        JSON.stringify(track)
+      );
     });
-    
+
     globalState.masterList = [...trackNames];
     renderMasterList();
     return trackNames;
