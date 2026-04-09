@@ -1,4 +1,4 @@
- const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAEu01AD_j1VWJaW-y3e2srmtSLBtmrqqs",
   authDomain: "linguabinary.firebaseapp.com",
   projectId: "linguabinary",
@@ -9,7 +9,11 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
-import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
 console.log("[ADMIN SCRIPT] Firebase imports loaded");
