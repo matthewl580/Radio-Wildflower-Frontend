@@ -60,10 +60,153 @@ function setData(fileName, data, func = () => {}) {
     });
 }
 
+const MASTER_TRACKLIST_URL =
+  "https://firebasestorage.googleapis.com/v0/b/linguabinary.firebasestorage.app/o/Tracks%2FTRACKLIST.json?alt=media&token=3d183bc2-88c3-4c06-b428-d060cce25459";
+const MASTER_TRACKLIST_PATH = "TRACKLIST.json";
+
+const globalState = { masterList: [] };
+
+async function fetchMasterTrackList() {
+  try {
+    const response = await fetch(MASTER_TRACKLIST_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const list = await response.json();
+    if (!Array.isArray(list)) throw new Error("Invalid JSON array");
+    globalState.masterList = [...list];
+    renderMasterList();
+    return list;
+  } catch (error) {
+    console.error("Failed to fetch master tracklist:", error);
+    showToast("Failed to load master track list from Firebase", 5000, "error");
+    document.getElementById("globalTrackList").innerHTML =
+      '<li style="color: #c62828; text-align: center; padding: 20px;">Failed to load master track list</li>';
+  }
+}
+
+function renderMasterList() {
+  const ul = document.getElementById("globalTrackList");
+  if (!ul) return;
+
+  ul.innerHTML = "";
+  globalState.masterList.forEach((track, idx) => {
+    const li = document.createElement("li");
+    li.className = "tracklist-item";
+    li.dataset.index = idx;
+    li.innerHTML = `
+      <span class="track-name">${track}</span>
+      <button class="delete-track" data-index="${idx}" title="Delete track">🗑️</button>
+    `;
+    ul.appendChild(li);
+  });
+
+  const container = ul.parentElement;
+  const remEl = container.querySelector(".tracklist-remaining");
+  if (remEl) {
+    const remaining = Math.max(0, globalState.masterList.length - 3);
+    remEl.innerHTML = remaining > 0 ? `<em>and ${remaining} more</em>` : "";
+  }
+}
+
+// Global tracklist container
+const globalTracklistContainer = document.querySelector(
+  ".global-tracklist-container",
+);
+const masterAddBtn = document.querySelector(
+  "#master-add-select + .add-track-button",
+);
+const masterUl = document.getElementById("globalTrackList");
+
+// Master list handlers (add after page load when elements exist)
+function setupMasterHandlers() {
+  if (!masterUl || !masterAddBtn) return;
+
+  // Delete handlers for master list
+  masterUl.addEventListener("click", async (ev) => {
+    const del = ev.target.closest(".delete-track");
+    if (!del) return;
+    const idx = Number(del.dataset.index);
+    if (Number.isNaN(idx)) return;
+
+    const updated = [...globalState.masterList];
+    const removed = updated.splice(idx, 1)[0];
+
+    // Optimistic UI
+    renderMasterListForArray(updated);
+
+    try {
+      await setData(
+        MASTER_TRACKLIST_PATH,
+        JSON.stringify(updated, null, 2),
+        (snapshot) => {
+          globalState.masterList = updated;
+          showToast(`Removed "${removed}" from master list`, 3000, "success");
+        },
+      );
+    } catch (err) {
+      console.error("Upload failed:", err);
+      showToast("Failed to update master list", 4000, "error");
+      renderMasterList(); // Revert
+    }
+  });
+
+  // Add handler for master list
+  masterAddBtn.addEventListener("click", async () => {
+    const select = document.getElementById("master-add-select");
+    const chosenId = select.value;
+    if (!chosenId) {
+      showToast("Please select a track", 3000, "error");
+      return;
+    }
+
+    try {
+      const metadata = await fetchServerTrackMetadata();
+      const track = metadata[chosenId];
+      const title = track
+        ? track.title || track.track?.title || chosenId
+        : chosenId;
+
+      if (globalState.masterList.includes(title)) {
+        showToast("Track already in master list", 3000, "error");
+        return;
+      }
+
+      const updated = [...globalState.masterList, title];
+
+      // Optimistic UI
+      renderMasterListForArray(updated);
+
+      await setData(
+        MASTER_TRACKLIST_PATH,
+        JSON.stringify(updated, null, 2),
+        (snapshot) => {
+          globalState.masterList = updated;
+          showToast(`Added "${title}" to master list`, 3000, "success");
+          select.value = "";
+        },
+      );
+    } catch (err) {
+      console.error("Failed to add track:", err);
+      showToast("Failed to update master list", 4000, "error");
+      renderMasterList();
+    }
+  });
+}
+
+// Helper for renderMasterList to accept array param
+function renderMasterListForArray(arr) {
+  globalState.masterList = [...arr];
+  renderMasterList();
+}
+
+// Update onload to setup handlers after DOM/Dropdowns ready
 document.body.onload = () => {
   populateRadioStationList();
-  // Also try to populate dropdowns after a short delay in case stations load quickly
-  setTimeout(() => populateAllTrackDropdowns(), 500);
+  setTimeout(() => {
+    populateAllTrackDropdowns();
+    fetchMasterTrackList().finally(() => {
+      setupMasterHandlers();
+    });
+  }, 500);
   setInterval(populateRadioStationList, 3000);
 };
 
@@ -708,12 +851,12 @@ async function fetchServerTrackNames() {
   return names;
 }
 
-// Populate all track dropdowns with server track data
+// Populate all track dropdowns with server track data (stations + master)
 async function populateAllTrackDropdowns() {
   try {
     const metadata = await fetchServerTrackMetadata();
 
-    // Find all track dropdowns
+    // Find all track dropdowns including master
     const dropdowns = document.querySelectorAll(".add-track-select");
     dropdowns.forEach((select) => {
       // Clear existing options except the default
@@ -741,11 +884,13 @@ async function populateAllTrackDropdowns() {
         select.appendChild(o);
       });
 
-      // Restore previous selection if present
-      const stationName = select.id.replace("add-select-", "");
-      const prev =
-        stationState[stationName] && stationState[stationName].selected;
-      if (prev) select.value = prev;
+      // Restore station-specific previous selection if applicable (skip for master list)
+      if (select.id && select.id.startsWith("add-select-")) {
+        const stationName = select.id.replace("add-select-", "");
+        const prev =
+          stationState[stationName] && stationState[stationName].selected;
+        if (prev) select.value = prev;
+      }
     });
   } catch (err) {
     console.error("Error populating track dropdowns:", err);

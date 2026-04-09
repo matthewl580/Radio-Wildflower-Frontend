@@ -48,6 +48,22 @@
           <div class="admin-section">
             <h2>Radio Station Management</h2>
             <div id="radioStationList" class="stations-list"></div>
+
+            <!-- Global Track List Management -->
+            <div class="admin-section">
+              <h2>Global Track List (Master List)</h2>
+              <div class="global-tracklist-container">
+                <div class="tracklist-title">Master Track List</div>
+                <ul id="globalTrackList" class="station-tracklist"></ul>
+                <div class="tracklist-controls">
+                  <select class="add-track-select" id="master-add-select">
+                    <option value="">-- select track --</option>
+                  </select>
+                  <button class="add-track-button">Add to Master List</button>
+                </div>
+                <div class="tracklist-remaining"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Add New Track Form -->
