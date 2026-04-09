@@ -74,11 +74,29 @@ async function fetchMasterTrackList() {
   try {
     const response = await fetch(buildUrl("/getTrackList"));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const list = await response.json();
-    if (!Array.isArray(list)) throw new Error("Invalid JSON array");
-    globalState.masterList = [...list];
+    const data = await response.json();
+    let trackList;
+    
+    // Extract tracklist array from the response
+    if (Array.isArray(data)) {
+      trackList = data;
+    } else if (data.tracklist && Array.isArray(data.tracklist)) {
+      trackList = data.tracklist;
+    } else if (data.tracks && Array.isArray(data.tracks)) {
+      trackList = data.tracks;
+    } else {
+      throw new Error("Invalid response format: expected array or object with tracks/tracklist property");
+    }
+    
+    // Extract track names from track objects
+    const trackNames = trackList.map(track => {
+      if (typeof track === "string") return track;
+      return track["Track Name"] || track.name || track.title || JSON.stringify(track);
+    });
+    
+    globalState.masterList = [...trackNames];
     renderMasterList();
-    return list;
+    return trackNames;
   } catch (error) {
     console.error("Failed to fetch master tracklist:", error);
     showToast("Failed to load master track list", 5000, "error");
