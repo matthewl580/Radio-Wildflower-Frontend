@@ -13,6 +13,7 @@ import {
   getStorage,
   ref,
   getDownloadURL,
+  uploadBytes,
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
 console.log("[ADMIN SCRIPT] Firebase imports loaded");
@@ -35,10 +36,8 @@ function buildUrl(path) {
 }
 
 function getData(fileName, userCode, func = () => {}) {
-  const storageRef = storage.ref(`/Users/${userCode}`);
-  storageRef
-    .child(fileName)
-    .getDownloadURL()
+  const storageRef = ref(storage, `/Users/${userCode}/${fileName}`);
+  getDownloadURL(storageRef)
     .then((url) => {
       fetch(url)
         .then((response) => response.text())
@@ -54,13 +53,15 @@ function getData(fileName, userCode, func = () => {}) {
 }
 
 function setData(fileName, data, func = () => {}) {
-  const storageRef = storage.ref(`/Tracks/`);
-  storageRef
-    .child(fileName)
-    .put(data)
+  const storageRef = ref(storage, `/Tracks/${fileName}`);
+  uploadBytes(storageRef, data)
     .then((snapshot) => {
       func(snapshot);
       console.log("Uploaded a raw string!");
+    })
+    .catch((error) => {
+      console.error("Failed to upload data to Firebase Storage:", error);
+      func(undefined);
     });
 }
 
@@ -1206,11 +1207,11 @@ document.getElementById("submit").onclick = async (e) => {
     return;
   }
 
-  setData("FreshlyUploadedMP3File", fileInput.files[0], (data) => {
-    if (!data) return;
+  setData("FreshlyUploadedMP3File", fileInput.files[0], (snapshot) => {
+    if (!snapshot) return;
 
-    data.ref
-      .getDownloadURL()
+    const fileRef = snapshot.ref;
+    getDownloadURL(fileRef)
       .then((downloadURL) => {
         document.getElementById("trackDurationExtractor").src = downloadURL;
         const audio = document.getElementById("trackDurationExtractor");
