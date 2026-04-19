@@ -36,8 +36,8 @@ const currentTrackEl = document.getElementById("currentTrack");
 // Recently played tracks management
 function addToRecentlyPlayed(track) {
   // Remove if already exists
-  recentlyPlayedTracks = recentlyPlayedTracks.filter(t =>
-    !(t.artist === track.artist && t.title === track.title)
+  recentlyPlayedTracks = recentlyPlayedTracks.filter(
+    (t) => !(t.artist === track.artist && t.title === track.title),
   );
 
   // Add to beginning
@@ -54,25 +54,25 @@ function addToRecentlyPlayed(track) {
 function updateRecentlyPlayedList() {
   if (!tracksList) return;
 
-  tracksList.innerHTML = '';
+  tracksList.innerHTML = "";
 
-  recentlyPlayedTracks.forEach(track => {
-    const trackItem = document.createElement('div');
-    trackItem.className = 'track-item';
+  recentlyPlayedTracks.forEach((track) => {
+    const trackItem = document.createElement("div");
+    trackItem.className = "track-item";
 
-    const trackInfo = document.createElement('div');
-    trackInfo.className = 'track-info';
+    const trackInfo = document.createElement("div");
+    trackInfo.className = "track-info";
 
-    const artistEl = document.createElement('div');
-    artistEl.className = 'track-artist';
+    const artistEl = document.createElement("div");
+    artistEl.className = "track-artist";
     artistEl.textContent = track.artist;
 
-    const titleEl = document.createElement('div');
-    titleEl.className = 'track-title';
+    const titleEl = document.createElement("div");
+    titleEl.className = "track-title";
     titleEl.textContent = track.title;
 
-    const timestampEl = document.createElement('div');
-    timestampEl.className = 'track-timestamp';
+    const timestampEl = document.createElement("div");
+    timestampEl.className = "track-timestamp";
     timestampEl.textContent = formatTimestamp(track.timestamp);
 
     trackInfo.appendChild(artistEl);
@@ -95,7 +95,7 @@ function formatTimestamp(date) {
   if (days > 0) return `${days}d ago`;
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
-  return 'Just now';
+  return "Just now";
 }
 
 // Loading overlay functions
@@ -528,37 +528,35 @@ function populateUI(trackObject, stationName) {
     artist: trackObject.track.author || "Unknown Artist",
     title: trackObject.track.title || "Unknown Title",
     timestamp: new Date(),
-    station: stationName
+    station: stationName,
   });
 
   // Enable play button
   playPauseBtn.disabled = false;
 }
-    const artistSrc =
-      trackObject.track.artistPhoto || trackObject.artistPhoto || null;
-    if (artistPhoto && artistSrc) {
-      artistPhoto.src = artistSrc;
-    }
-  
+const artistSrc =
+  trackObject.track.artistPhoto || trackObject.artistPhoto || null;
+if (artistPhoto && artistSrc) {
+  artistPhoto.src = artistSrc;
+}
 
-  // If station has a track list stored, try to keep an index of current track
-  stationState[stationName] = stationState[stationName] || {};
-  const list = stationState[stationName].currentList || [];
-  if (list.length) {
-    // attempt to find index by matching title or SRC
-    let idx = list.findIndex((item) => {
-      if (!item) return false;
-      const t = (item.title || item.track || item.name || "").toString();
-      const s = (item.SRC || item.src || item.SRC || "").toString();
-      return (
-        (t && trackObject.track.title && t === trackObject.track.title) ||
-        (s && audioElement.src && s === audioElement.src)
-      );
-    });
-    if (idx === -1) idx = 0; // fallback
-    stationState[stationName].currentIndex = idx;
-  }
-
+// If station has a track list stored, try to keep an index of current track
+stationState[stationName] = stationState[stationName] || {};
+const list = stationState[stationName].currentList || [];
+if (list.length) {
+  // attempt to find index by matching title or SRC
+  let idx = list.findIndex((item) => {
+    if (!item) return false;
+    const t = (item.title || item.track || item.name || "").toString();
+    const s = (item.SRC || item.src || item.SRC || "").toString();
+    return (
+      (t && trackObject.track.title && t === trackObject.track.title) ||
+      (s && audioElement.src && s === audioElement.src)
+    );
+  });
+  if (idx === -1) idx = 0; // fallback
+  stationState[stationName].currentIndex = idx;
+}
 
 // Helpers for prev/next navigation and playing an item from the station list
 
