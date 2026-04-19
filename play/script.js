@@ -147,7 +147,17 @@ audioElement.onended = function () {
   // increment segment counter
   segmentCount++;
   updateCounterDisplay();
-  let currentStationName = document.getElementById("trackName").dataset.station;
+  const currentStationName =
+    currentlyPlayingStation ||
+    document.getElementById("currentTrack")?.dataset?.station ||
+    null;
+
+  if (!currentStationName) {
+    console.error(
+      "Cannot fetch next segment because current station is unavailable.",
+    );
+    return;
+  }
 
   // Check if the next segment was already preloaded
   if (preloadedNextSegmentSrc[currentStationName]) {
