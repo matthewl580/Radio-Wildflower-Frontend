@@ -1,11 +1,4 @@
-/* Import Material Design tokens and themes */
-@import url("/global/Material Design/tokens.css");
-@import url("/global/Material Design/colors.module.css");
-@import url("/global/Material Design/theme.light.css")
-(prefers-color-scheme: light);
-@import url("/global/Material Design/theme.dark.css")
-(prefers-color-scheme: dark);
-
+/* Global Styles for Radio Wildflower */
 /* Import Google Fonts with performance optimizations */
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 @import url("./animations.css");

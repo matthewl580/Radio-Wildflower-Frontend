@@ -32,15 +32,9 @@
     };
     img.loading = "eager";
     logoContainer.appendChild(img);
-    const brand = document.createElement("div");
-    brand.id = "brandWordMark";
-    // allow per-page override via body dataset
-    brand.textContent =
-      document.body && document.body.dataset && document.body.dataset.brand
-        ? document.body.dataset.brand
-        : "Matthew Radio";
+    
     logoBar.appendChild(logoContainer);
-    logoBar.appendChild(brand);
+   
 
     // toggle
     const toggle = document.createElement("button");

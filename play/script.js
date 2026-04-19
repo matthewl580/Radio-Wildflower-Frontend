@@ -20,12 +20,82 @@ let isPlaying = false; // Track playing state
 let stationState = {};
 let segmentCount = 0;
 
+// Recently played tracks storage
+let recentlyPlayedTracks = [];
+
 // Get UI elements
 const playPauseBtn = document.getElementById("playPauseBtn");
-const stopBtn = document.getElementById("stopBtn"); // may be null if markup omits it
-// prev/next controls removed per requirements
-const visualizerBars = document.querySelectorAll(".visualizer-bar");
-const artistPhoto = document.querySelector(".artist-photo");
+const infoBtn = document.getElementById("infoBtn");
+const drawer = document.getElementById("recentlyPlayedDrawer");
+const drawerHandle = drawer?.querySelector(".drawer-handle");
+const tracksList = document.getElementById("recentTracks");
+const currentArtistEl = document.getElementById("currentArtist");
+const currentTrackEl = document.getElementById("currentTrack");
+
+// Recently played tracks management
+function addToRecentlyPlayed(track) {
+  // Remove if already exists
+  recentlyPlayedTracks = recentlyPlayedTracks.filter(t =>
+    !(t.artist === track.artist && t.title === track.title)
+  );
+
+  // Add to beginning
+  recentlyPlayedTracks.unshift(track);
+
+  // Keep only last 10 tracks
+  if (recentlyPlayedTracks.length > 10) {
+    recentlyPlayedTracks = recentlyPlayedTracks.slice(0, 10);
+  }
+
+  updateRecentlyPlayedList();
+}
+
+function updateRecentlyPlayedList() {
+  if (!tracksList) return;
+
+  tracksList.innerHTML = '';
+
+  recentlyPlayedTracks.forEach(track => {
+    const trackItem = document.createElement('div');
+    trackItem.className = 'track-item';
+
+    const trackInfo = document.createElement('div');
+    trackInfo.className = 'track-info';
+
+    const artistEl = document.createElement('div');
+    artistEl.className = 'track-artist';
+    artistEl.textContent = track.artist;
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'track-title';
+    titleEl.textContent = track.title;
+
+    const timestampEl = document.createElement('div');
+    timestampEl.className = 'track-timestamp';
+    timestampEl.textContent = formatTimestamp(track.timestamp);
+
+    trackInfo.appendChild(artistEl);
+    trackInfo.appendChild(titleEl);
+
+    trackItem.appendChild(trackInfo);
+    trackItem.appendChild(timestampEl);
+
+    tracksList.appendChild(trackItem);
+  });
+}
+
+function formatTimestamp(date) {
+  const now = new Date();
+  const diff = now - date;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'Just now';
+}
 
 // Loading overlay functions
 function showLoadingOverlay() {
@@ -183,24 +253,20 @@ function animateVisualizer() {
 }
 
 function updatePlayPauseButton() {
-  const icon = playPauseBtn.querySelector(".material-symbols-rounded");
   if (isPlaying) {
-    icon.textContent = "pause";
+    playPauseBtn.classList.add("playing");
   } else {
-    icon.textContent = "play_arrow";
+    playPauseBtn.classList.remove("playing");
   }
 }
 
 function resetUI() {
-  document.getElementById("trackName").textContent =
-    "Select a station to start listening";
-  document.getElementById("trackAuthor").textContent = "";
-  document.getElementById("trackCurrentPosition").textContent = "0:00";
-  document.getElementById("trackDuration").textContent = "0:00";
-  document.getElementById("trackProgressMeter").value = 0;
+  if (currentArtistEl) currentArtistEl.textContent = "ARTIST NAME";
+  if (currentTrackEl) currentTrackEl.textContent = "Track Name";
   playPauseBtn.disabled = true;
-  if (stopBtn) stopBtn.disabled = true;
   updateCounterDisplay();
+  recentlyPlayedTracks = [];
+  updateRecentlyPlayedList();
 }
 
 /**
@@ -448,46 +514,31 @@ function getAllStations(callback = () => {}) {
 }
 
 function populateUI(trackObject, stationName) {
-  // progress and basic metadata
-  document.getElementById("trackProgressMeter").value =
-    trackObject.track.position;
-  document.getElementById("trackProgressMeter").max =
-    trackObject.track.duration;
-  document.getElementById("trackName").textContent =
-    trackObject.track.title || "Unknown Title";
-  document.getElementById("trackAuthor").textContent =
-    trackObject.track.author || "";
-  document.getElementById("trackCurrentPosition").textContent = formatTime(
-    trackObject.track.position,
-  );
-  document.getElementById("trackDuration").textContent = formatTime(
-    trackObject.track.duration,
-  );
-  document.getElementById("trackName").dataset.station = stationName;
-
-  // Update artwork if provided by server (fallback to default)
-  try {
-    const artSrc =
-      trackObject.track.artwork ||
-      (trackObject.currentSegment && trackObject.currentSegment.artwork) ||
-      null;
-    if (artSrc) {
-      document.getElementById("trackArtwork").src = artSrc;
-    }
-  } catch (e) {
-    /* ignore */
+  // Update artist and track display
+  if (currentArtistEl) {
+    currentArtistEl.textContent = trackObject.track.author || "ARTIST NAME";
+  }
+  if (currentTrackEl) {
+    currentTrackEl.textContent = trackObject.track.title || "Track Name";
   }
 
-  // Update artist photo if provided
-  try {
+  // Add to recently played tracks
+  addToRecentlyPlayed({
+    artist: trackObject.track.author || "Unknown Artist",
+    title: trackObject.track.title || "Unknown Title",
+    timestamp: new Date(),
+    station: stationName
+  });
+
+  // Enable play button
+  playPauseBtn.disabled = false;
+}
     const artistSrc =
       trackObject.track.artistPhoto || trackObject.artistPhoto || null;
     if (artistPhoto && artistSrc) {
       artistPhoto.src = artistSrc;
     }
-  } catch (e) {
-    /* ignore */
-  }
+  
 
   // If station has a track list stored, try to keep an index of current track
   stationState[stationName] = stationState[stationName] || {};
@@ -506,7 +557,7 @@ function populateUI(trackObject, stationName) {
     if (idx === -1) idx = 0; // fallback
     stationState[stationName].currentIndex = idx;
   }
-}
+
 
 // Helpers for prev/next navigation and playing an item from the station list
 
