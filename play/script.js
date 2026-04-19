@@ -25,6 +25,7 @@ let recentlyPlayedTracks = [];
 
 // Get UI elements
 const playPauseBtn = document.getElementById("playPauseBtn");
+const stopBtn = document.getElementById("stopBtn");
 const infoBtn = document.getElementById("infoBtn");
 const drawer = document.getElementById("recentlyPlayedDrawer");
 const drawerHandle = drawer?.querySelector(".drawer-handle");
