@@ -33,6 +33,7 @@ const tracksList = document.getElementById("recentTracks");
 const currentArtistEl = document.getElementById("currentArtist");
 const currentTrackEl = document.getElementById("currentTrack");
 const artistPhoto = document.querySelector(".artist-photo");
+const visualizerBars = document.querySelectorAll(".visualizer-bar");
 
 // Recently played tracks management
 function addToRecentlyPlayed(track) {
@@ -238,6 +239,8 @@ function stopVisualizer() {
     clearInterval(visualizerInterval);
     visualizerInterval = null;
   }
+  if (!visualizerBars?.length) return;
+
   // Reset visualizer bars to default state
   visualizerBars.forEach((bar) => {
     bar.style.height = "8px";
@@ -246,6 +249,8 @@ function stopVisualizer() {
 }
 
 function animateVisualizer() {
+  if (!visualizerBars?.length) return;
+
   visualizerBars.forEach((bar, index) => {
     const height = Math.random() * 12 + 4; // Random height between 4px and 16px
     const opacity = Math.random() * 0.4 + 0.6; // Random opacity between 0.6 and 1
