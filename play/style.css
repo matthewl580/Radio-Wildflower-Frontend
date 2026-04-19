@@ -2,11 +2,11 @@
 
 :root {
   /* Deep Burnt Orange Monochromatic Palette */
-  --primary-orange: #8b4513; /* Deep burnt orange */
-  --orange-dark: #654321; /* Darker burnt orange */
-  --orange-darker: #4a2c17; /* Even darker */
-  --orange-light: #a0522d; /* Lighter burnt orange */
-  --orange-accent: #cd853f; /* Accent burnt orange */
+  --primary-orange: #3c2a1e; /* Deep burnt orange */
+  --orange-dark: #3c2a1e; /* Darker burnt orange */
+  --orange-darker: #3c2a1e; /* Even darker */
+  --orange-light: #3c2a1e; /* Lighter burnt orange */
+  --orange-accent: #3c2a1e; /* Accent burnt orange */
 
   /* Typography */
   --font-display: "Montserrat", sans-serif;

@@ -32,6 +32,7 @@ const drawerHandle = drawer?.querySelector(".drawer-handle");
 const tracksList = document.getElementById("recentTracks");
 const currentArtistEl = document.getElementById("currentArtist");
 const currentTrackEl = document.getElementById("currentTrack");
+const artistPhoto = document.querySelector(".artist-photo");
 
 // Recently played tracks management
 function addToRecentlyPlayed(track) {
@@ -523,6 +524,12 @@ function populateUI(trackObject, stationName) {
     currentTrackEl.textContent = trackObject.track.title || "Track Name";
   }
 
+  const artistSrc =
+    trackObject.track.artistPhoto || trackObject.artistPhoto || null;
+  if (artistPhoto && artistSrc) {
+    artistPhoto.src = artistSrc;
+  }
+
   // Add to recently played tracks
   addToRecentlyPlayed({
     artist: trackObject.track.author || "Unknown Artist",
@@ -531,31 +538,26 @@ function populateUI(trackObject, stationName) {
     station: stationName,
   });
 
+  // If station has a track list stored, try to keep an index of current track
+  stationState[stationName] = stationState[stationName] || {};
+  const list = stationState[stationName].currentList || [];
+  if (list.length) {
+    // attempt to find index by matching title or SRC
+    let idx = list.findIndex((item) => {
+      if (!item) return false;
+      const t = (item.title || item.track || item.name || "").toString();
+      const s = (item.SRC || item.src || item.SRC || "").toString();
+      return (
+        (t && trackObject.track.title && t === trackObject.track.title) ||
+        (s && audioElement.src && s === audioElement.src)
+      );
+    });
+    if (idx === -1) idx = 0; // fallback
+    stationState[stationName].currentIndex = idx;
+  }
+
   // Enable play button
   playPauseBtn.disabled = false;
-}
-const artistSrc =
-  trackObject.track.artistPhoto || trackObject.artistPhoto || null;
-if (artistPhoto && artistSrc) {
-  artistPhoto.src = artistSrc;
-}
-
-// If station has a track list stored, try to keep an index of current track
-stationState[stationName] = stationState[stationName] || {};
-const list = stationState[stationName].currentList || [];
-if (list.length) {
-  // attempt to find index by matching title or SRC
-  let idx = list.findIndex((item) => {
-    if (!item) return false;
-    const t = (item.title || item.track || item.name || "").toString();
-    const s = (item.SRC || item.src || item.SRC || "").toString();
-    return (
-      (t && trackObject.track.title && t === trackObject.track.title) ||
-      (s && audioElement.src && s === audioElement.src)
-    );
-  });
-  if (idx === -1) idx = 0; // fallback
-  stationState[stationName].currentIndex = idx;
 }
 
 // Helpers for prev/next navigation and playing an item from the station list
